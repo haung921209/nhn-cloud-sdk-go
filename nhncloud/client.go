@@ -72,7 +72,7 @@ func (c *Client) MySQL() *mysql.Client {
 	defer c.mu.Unlock()
 	if c.mysqlClient == nil {
 		appKey := c.config.AppKeys["rds-mysql"]
-		c.mysqlClient = mysql.NewClient(c.config.Region, appKey, c.config.Credentials, c.config.httpClient(), c.config.Debug)
+		c.mysqlClient = mysql.NewClient(c.config.Region, appKey, c.config.Credentials, c.config.Debug)
 	}
 	return c.mysqlClient
 }
@@ -82,7 +82,7 @@ func (c *Client) MariaDB() *mariadb.Client {
 	defer c.mu.Unlock()
 	if c.mariadbClient == nil {
 		appKey := c.config.AppKeys["rds-mariadb"]
-		c.mariadbClient = mariadb.NewClient(c.config.Region, appKey, c.config.Credentials, c.config.httpClient(), c.config.Debug)
+		c.mariadbClient = mariadb.NewClient(c.config.Region, appKey, c.config.Credentials, c.config.Debug)
 	}
 	return c.mariadbClient
 }
@@ -92,7 +92,7 @@ func (c *Client) PostgreSQL() *postgresql.Client {
 	defer c.mu.Unlock()
 	if c.pgClient == nil {
 		appKey := c.config.AppKeys["rds-postgresql"]
-		c.pgClient = postgresql.NewClient(c.config.Region, appKey, c.config.Credentials, c.config.httpClient(), c.config.Debug)
+		c.pgClient = postgresql.NewClient(c.config.Region, appKey, c.config.Credentials, c.config.Debug)
 	}
 	return c.pgClient
 }

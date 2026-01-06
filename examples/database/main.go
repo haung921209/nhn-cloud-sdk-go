@@ -76,7 +76,7 @@ func main() {
 			log.Printf("Failed to list MySQL versions: %v", err)
 		} else {
 			for _, v := range versions.Versions {
-				fmt.Printf("  - %s (%s)\n", v.Version, v.Name)
+				fmt.Printf("  - %s (%s)\n", v.DBVersion, v.DisplayName)
 			}
 		}
 	}
@@ -112,19 +112,6 @@ func main() {
 			}
 		}
 
-		fmt.Println("\n=== PostgreSQL Extensions ===")
-		extensions, err := client.PostgreSQL().ListExtensions(ctx)
-		if err != nil {
-			log.Printf("Failed to list PostgreSQL extensions: %v", err)
-		} else {
-			for i, ext := range extensions.Extensions {
-				if i >= 10 {
-					fmt.Printf("  ... and %d more\n", len(extensions.Extensions)-10)
-					break
-				}
-				fmt.Printf("  - %s (v%s)\n", ext.Name, ext.Version)
-			}
-		}
 	}
 
 	fmt.Println("\nDone!")

@@ -5,57 +5,66 @@ import (
 	"strings"
 )
 
-type ServiceType string
+type Service string
 
 const (
-	ServiceIAM        ServiceType = "iam"
-	ServiceCompute    ServiceType = "compute"
-	ServiceNetwork    ServiceType = "network"
-	ServiceRDSMySQL   ServiceType = "rds-mysql"
-	ServiceRDSMariaDB ServiceType = "rds-mariadb"
-	ServiceRDSPG      ServiceType = "rds-postgresql"
-	ServiceVPC        ServiceType = "vpc"
-	ServiceBlock      ServiceType = "block-storage"
-	ServiceObject     ServiceType = "object-storage"
-	ServiceNKS        ServiceType = "nks"
-	ServiceNCR        ServiceType = "ncr"
-	ServiceNCS        ServiceType = "ncs"
+	ServiceIAM           Service = "iam"
+	ServiceCompute       Service = "compute"
+	ServiceRDSMySQL      Service = "rds-mysql"
+	ServiceRDSMariaDB    Service = "rds-mariadb"
+	ServiceRDSPostgreSQL Service = "rds-postgresql"
+	ServiceVPC           Service = "vpc"
+	ServiceSecurityGroup Service = "security-group"
+	ServiceFloatingIP    Service = "floating-ip"
+	ServiceLoadBalancer  Service = "load-balancer"
+	ServiceBlockStorage  Service = "block-storage"
+	ServiceObjectStorage Service = "object-storage"
+	ServiceNKS           Service = "nks"
+	ServiceNCR           Service = "ncr"
+	ServiceNCS           Service = "ncs"
 )
 
-var baseURLTemplates = map[ServiceType]string{
-	ServiceIAM:        "https://iam.api.nhncloudservice.com",
-	ServiceRDSMySQL:   "https://%s-rds-mysql.api.nhncloudservice.com",
-	ServiceRDSMariaDB: "https://%s-rds-mariadb.api.nhncloudservice.com",
-	ServiceRDSPG:      "https://%s-rds-postgres.api.nhncloudservice.com",
-}
-
-func Resolve(serviceType ServiceType, region string) string {
+func Resolve(service Service, region string) string {
 	region = strings.ToLower(region)
 
-	template, ok := baseURLTemplates[serviceType]
-	if !ok {
+	switch service {
+	case ServiceIAM:
+		return "https://oauth.api.nhncloudservice.com"
+	case ServiceCompute:
+		return fmt.Sprintf("https://%s-api-instance-infrastructure.nhncloudservice.com", region)
+	case ServiceRDSMySQL:
+		return fmt.Sprintf("https://%s-rds-mysql.api.nhncloudservice.com/v3.0", region)
+	case ServiceRDSMariaDB:
+		return fmt.Sprintf("https://%s-rds-mariadb.api.nhncloudservice.com/v3.0", region)
+	case ServiceRDSPostgreSQL:
+		return fmt.Sprintf("https://%s-rds-postgresql.api.nhncloudservice.com/v1.0", region)
+	case ServiceVPC:
+		return fmt.Sprintf("https://%s-api-network-infrastructure.nhncloudservice.com", region)
+	case ServiceSecurityGroup:
+		return fmt.Sprintf("https://%s-api-network-infrastructure.nhncloudservice.com", region)
+	case ServiceFloatingIP:
+		return fmt.Sprintf("https://%s-api-network-infrastructure.nhncloudservice.com", region)
+	case ServiceLoadBalancer:
+		return fmt.Sprintf("https://%s-api-network-infrastructure.nhncloudservice.com", region)
+	case ServiceBlockStorage:
+		return fmt.Sprintf("https://%s-api-block-storage-infrastructure.nhncloudservice.com", region)
+	case ServiceObjectStorage:
+		return fmt.Sprintf("https://%s-api-object-storage.nhncloudservice.com", region)
+	case ServiceNKS:
+		return fmt.Sprintf("https://%s-api-kubernetes-infrastructure.nhncloudservice.com", region)
+	case ServiceNCR:
+		return "https://kr1-ncr.api.nhncloudservice.com"
+	case ServiceNCS:
+		return "https://ncs.api.nhncloudservice.com"
+	default:
 		return ""
 	}
-
-	if strings.Contains(template, "%s") {
-		return fmt.Sprintf(template, region)
-	}
-
-	return template
 }
 
-func ResolveWithAppKey(serviceType ServiceType, region, appKey string) string {
-	baseURL := Resolve(serviceType, region)
-	if baseURL == "" || appKey == "" {
-		return baseURL
+func ResolveWithAppKey(service Service, region, appKey string) string {
+	base := Resolve(service, region)
+	if appKey != "" {
+		return base + "/appkeys/" + appKey
 	}
-
-	switch serviceType {
-	case ServiceRDSMySQL, ServiceRDSMariaDB, ServiceRDSPG:
-		return baseURL + "/v3.0/appkeys/" + appKey
-	case ServiceNCR, ServiceNCS:
-		return baseURL + "/v2.0/appkeys/" + appKey
-	default:
-		return baseURL
-	}
+	return base
 }

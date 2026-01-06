@@ -1,17 +1,16 @@
 package postgresql
 
-// ResponseHeader represents the common API response header
 type ResponseHeader struct {
 	ResultCode    int    `json:"resultCode"`
 	ResultMessage string `json:"resultMessage"`
 	IsSuccessful  bool   `json:"isSuccessful"`
 }
 
-// Instance represents a PostgreSQL database instance
 type Instance struct {
 	ID                    string   `json:"dbInstanceId"`
 	Name                  string   `json:"dbInstanceName"`
 	Status                string   `json:"dbInstanceStatus"`
+	Type                  string   `json:"dbInstanceType,omitempty"`
 	Description           string   `json:"description,omitempty"`
 	Version               string   `json:"dbVersion"`
 	Port                  int      `json:"dbPort"`
@@ -22,170 +21,173 @@ type Instance struct {
 	FlavorID              string   `json:"dbFlavorId"`
 	ParameterGroupID      string   `json:"parameterGroupId,omitempty"`
 	UseDeletionProtection bool     `json:"useDeletionProtection,omitempty"`
+	UseHighAvailability   bool     `json:"useHighAvailability,omitempty"`
 	CreatedAt             string   `json:"createdYmdt"`
 	UpdatedAt             string   `json:"updatedYmdt"`
 }
 
-// InstanceGroup represents a PostgreSQL instance group (for HA)
-type InstanceGroup struct {
-	ID              string `json:"dbInstanceGroupId"`
-	ReplicationType string `json:"replicationType"`
-	CreatedAt       string `json:"createdYmdt"`
-	UpdatedAt       string `json:"updatedYmdt"`
-}
-
-// ListInstancesOutput represents the response for listing instances
 type ListInstancesOutput struct {
 	Header    *ResponseHeader `json:"header"`
 	Instances []Instance      `json:"dbInstances"`
 }
 
-// ListInstanceGroupsOutput represents the response for listing instance groups
-type ListInstanceGroupsOutput struct {
-	Header         *ResponseHeader `json:"header"`
-	InstanceGroups []InstanceGroup `json:"dbInstanceGroups"`
-}
-
-// GetInstanceOutput represents the response for getting a single instance
 type GetInstanceOutput struct {
 	Header *ResponseHeader `json:"header"`
 	Instance
 }
 
-// Network represents network configuration for an instance
-type Network struct {
+type CreateInstanceInput struct {
+	Name                  string         `json:"dbInstanceName"`
+	Description           string         `json:"description,omitempty"`
+	FlavorID              string         `json:"dbFlavorId"`
+	Version               string         `json:"dbVersion"`
+	UserName              string         `json:"dbUserName"`
+	Password              string         `json:"dbUserPassword"`
+	Port                  int            `json:"dbPort,omitempty"`
+	ParameterGroupID      string         `json:"parameterGroupId"`
+	SecurityGroupIDs      []string       `json:"dbSecurityGroupIds,omitempty"`
+	Network               *NetworkConfig `json:"network"`
+	Storage               *StorageConfig `json:"storage"`
+	Backup                *BackupConfig  `json:"backup,omitempty"`
+	UseHighAvailability   bool           `json:"useHighAvailability,omitempty"`
+	UseDeletionProtection bool           `json:"useDeletionProtection,omitempty"`
+}
+
+type NetworkConfig struct {
 	SubnetID         string `json:"subnetId"`
 	AvailabilityZone string `json:"availabilityZone,omitempty"`
 	UsePublicAccess  bool   `json:"usePublicAccess,omitempty"`
 }
 
-// Storage represents storage configuration for an instance
-type Storage struct {
+type StorageConfig struct {
 	StorageType string `json:"storageType"`
 	StorageSize int    `json:"storageSize"`
 }
 
-// BackupSchedule represents a backup time window
-type BackupSchedule struct {
-	BeginTime string `json:"backupWndBgnTime"`
-	Duration  string `json:"backupWndDuration"`
-}
-
-// BackupConfig represents backup configuration
 type BackupConfig struct {
-	Period    int              `json:"backupPeriod"`
-	Schedules []BackupSchedule `json:"backupSchedules"`
+	BackupPeriod    int              `json:"backupPeriod"`
+	BackupSchedules []BackupSchedule `json:"backupSchedules,omitempty"`
 }
 
-// CreateInstanceInput represents the input for creating a PostgreSQL instance
-type CreateInstanceInput struct {
-	Name                  string        `json:"dbInstanceName"`
-	CandidateName         string        `json:"dbInstanceCandidateName,omitempty"`
-	Description           string        `json:"description,omitempty"`
-	FlavorID              string        `json:"dbFlavorId"`
-	Version               string        `json:"dbVersion"`
-	UserName              string        `json:"dbUserName"`
-	Password              string        `json:"dbPassword"`
-	Port                  int           `json:"dbPort,omitempty"`
-	ParameterGroupID      string        `json:"parameterGroupId"`
-	SecurityGroupIDs      []string      `json:"dbSecurityGroupIds,omitempty"`
-	Network               *Network      `json:"network"`
-	Storage               *Storage      `json:"storage"`
-	Backup                *BackupConfig `json:"backup"`
-	UseHighAvailability   bool          `json:"useHighAvailability,omitempty"`
-	UseDeletionProtection bool          `json:"useDeletionProtection,omitempty"`
+type BackupSchedule struct {
+	BackupWndBgnTime  string `json:"backupWndBgnTime"`
+	BackupWndDuration string `json:"backupWndDuration"`
 }
 
-// CreateInstanceOutput represents the response for creating an instance
-type CreateInstanceOutput struct {
-	Header *ResponseHeader `json:"header"`
-	Instance
-}
-
-// ModifyInstanceInput represents the input for modifying an instance
 type ModifyInstanceInput struct {
-	Name              string   `json:"dbInstanceName,omitempty"`
-	CandidateName     string   `json:"dbInstanceCandidateName,omitempty"`
-	Description       string   `json:"description,omitempty"`
-	Port              int      `json:"dbPort,omitempty"`
-	Version           string   `json:"dbVersion,omitempty"`
-	FlavorID          string   `json:"dbFlavorId,omitempty"`
-	ParameterGroupID  string   `json:"parameterGroupId,omitempty"`
-	SecurityGroupIDs  []string `json:"dbSecurityGroupIds,omitempty"`
-	ExecuteBackup     bool     `json:"executeBackup,omitempty"`
-	UseOnlineFailover bool     `json:"useOnlineFailover,omitempty"`
+	Name             string   `json:"dbInstanceName,omitempty"`
+	Description      string   `json:"description,omitempty"`
+	Port             int      `json:"dbPort,omitempty"`
+	FlavorID         string   `json:"dbFlavorId,omitempty"`
+	ParameterGroupID string   `json:"parameterGroupId,omitempty"`
+	SecurityGroupIDs []string `json:"dbSecurityGroupIds,omitempty"`
 }
 
-// JobOutput represents a job response (for async operations)
 type JobOutput struct {
 	Header *ResponseHeader `json:"header"`
-	JobID  string          `json:"jobId"`
+	JobID  string          `json:"jobId,omitempty"`
 }
 
-// Flavor represents a database flavor (instance type)
+type InstanceGroup struct {
+	ID              string     `json:"dbInstanceGroupId"`
+	ReplicationType string     `json:"replicationType"`
+	Instances       []Instance `json:"dbInstances,omitempty"`
+	CreatedAt       string     `json:"createdYmdt"`
+	UpdatedAt       string     `json:"updatedYmdt"`
+}
+
+type ListInstanceGroupsOutput struct {
+	Header         *ResponseHeader `json:"header"`
+	InstanceGroups []InstanceGroup `json:"dbInstanceGroups"`
+}
+
+type InstanceGroupOutput struct {
+	Header *ResponseHeader `json:"header"`
+	InstanceGroup
+}
+
 type Flavor struct {
 	ID    string `json:"dbFlavorId"`
 	Name  string `json:"dbFlavorName"`
 	RAM   int    `json:"ram"`
 	VCPUs int    `json:"vcpus"`
-	Disk  int    `json:"disk"`
 }
 
-// ListFlavorsOutput represents the response for listing flavors
 type ListFlavorsOutput struct {
 	Header  *ResponseHeader `json:"header"`
 	Flavors []Flavor        `json:"dbFlavors"`
 }
 
-// Version represents a database version
 type Version struct {
-	Version string `json:"dbVersion"`
-	Name    string `json:"dbVersionName"`
+	DBVersion   string `json:"dbVersion"`
+	DisplayName string `json:"dbVersionName"`
 }
 
-// ListVersionsOutput represents the response for listing versions
 type ListVersionsOutput struct {
 	Header   *ResponseHeader `json:"header"`
 	Versions []Version       `json:"dbVersions"`
 }
 
-// SecurityGroup represents a database security group
+type StorageType struct {
+	StorageType string `json:"storageType"`
+	MinSize     int    `json:"minSize"`
+	MaxSize     int    `json:"maxSize"`
+}
+
+type ListStorageTypesOutput struct {
+	Header       *ResponseHeader `json:"header"`
+	StorageTypes []StorageType   `json:"storageTypes"`
+}
+
 type SecurityGroup struct {
-	ID          string         `json:"dbSecurityGroupId"`
-	Name        string         `json:"dbSecurityGroupName"`
-	Description string         `json:"description,omitempty"`
-	Status      string         `json:"progressStatus"`
-	Rules       []SecurityRule `json:"rules,omitempty"`
-	CreatedAt   string         `json:"createdYmdt"`
-	UpdatedAt   string         `json:"updatedYmdt"`
+	ID          string              `json:"dbSecurityGroupId"`
+	Name        string              `json:"dbSecurityGroupName"`
+	Description string              `json:"description,omitempty"`
+	Rules       []SecurityGroupRule `json:"rules,omitempty"`
+	CreatedAt   string              `json:"createdYmdt,omitempty"`
+	UpdatedAt   string              `json:"updatedYmdt,omitempty"`
 }
 
-// SecurityRule represents a security group rule
-type SecurityRule struct {
-	ID          string `json:"ruleId"`
-	Description string `json:"description,omitempty"`
-	Direction   string `json:"direction"`
-	EtherType   string `json:"etherType"`
-	Port        Port   `json:"port"`
-	CIDR        string `json:"cidr"`
-	CreatedAt   string `json:"createdYmdt"`
-	UpdatedAt   string `json:"updatedYmdt"`
+type SecurityGroupRule struct {
+	ID        string `json:"dbSecurityGroupRuleId"`
+	Direction string `json:"direction"`
+	EtherType string `json:"etherType"`
+	Port      int    `json:"port,omitempty"`
+	CIDR      string `json:"cidr,omitempty"`
 }
 
-// Port represents port configuration in a security rule
-type Port struct {
-	PortType string `json:"portType"`
-	MinPort  *int   `json:"minPort,omitempty"`
-	MaxPort  *int   `json:"maxPort,omitempty"`
-}
-
-// ListSecurityGroupsOutput represents the response for listing security groups
 type ListSecurityGroupsOutput struct {
 	Header         *ResponseHeader `json:"header"`
 	SecurityGroups []SecurityGroup `json:"dbSecurityGroups"`
 }
 
-// ParameterGroup represents a parameter group
+type SecurityGroupOutput struct {
+	Header *ResponseHeader `json:"header"`
+	SecurityGroup
+}
+
+type CreateSecurityGroupInput struct {
+	Name        string `json:"dbSecurityGroupName"`
+	Description string `json:"description,omitempty"`
+}
+
+type SecurityGroupIDOutput struct {
+	Header          *ResponseHeader `json:"header"`
+	SecurityGroupID string          `json:"dbSecurityGroupId"`
+}
+
+type CreateSecurityGroupRuleInput struct {
+	Direction string `json:"direction"`
+	EtherType string `json:"etherType"`
+	Port      int    `json:"port,omitempty"`
+	CIDR      string `json:"cidr"`
+}
+
+type SecurityGroupRuleOutput struct {
+	Header *ResponseHeader `json:"header"`
+	RuleID string          `json:"dbSecurityGroupRuleId"`
+}
+
 type ParameterGroup struct {
 	ID          string      `json:"parameterGroupId"`
 	Name        string      `json:"parameterGroupName"`
@@ -193,102 +195,203 @@ type ParameterGroup struct {
 	Version     string      `json:"dbVersion"`
 	Status      string      `json:"parameterGroupStatus"`
 	Parameters  []Parameter `json:"parameters,omitempty"`
-	CreatedAt   string      `json:"createdYmdt"`
-	UpdatedAt   string      `json:"updatedYmdt"`
+	CreatedAt   string      `json:"createdYmdt,omitempty"`
+	UpdatedAt   string      `json:"updatedYmdt,omitempty"`
 }
 
-// Parameter represents a database parameter
 type Parameter struct {
-	ID           string `json:"parameterId"`
-	Name         string `json:"parameterName"`
+	Name         string `json:"name"`
 	Value        string `json:"value"`
-	DefaultValue string `json:"defaultValue"`
-	AllowedValue string `json:"allowedValue"`
-	UpdateType   string `json:"updateType"`
-	ApplyType    string `json:"applyType"`
+	DefaultValue string `json:"defaultValue,omitempty"`
+	AllowedValue string `json:"allowedValue,omitempty"`
+	UpdateType   string `json:"updateType,omitempty"`
 }
 
-// ListParameterGroupsOutput represents the response for listing parameter groups
 type ListParameterGroupsOutput struct {
 	Header          *ResponseHeader  `json:"header"`
 	ParameterGroups []ParameterGroup `json:"parameterGroups"`
 }
 
-// Backup represents a database backup
-type Backup struct {
-	ID         string `json:"backupId"`
-	Name       string `json:"backupName"`
-	Status     string `json:"backupStatus"`
-	InstanceID string `json:"dbInstanceId"`
-	Version    string `json:"dbVersion"`
-	Type       string `json:"backupType"`
-	Size       int64  `json:"backupSize"`
-	CreatedAt  string `json:"createdYmdt"`
-	UpdatedAt  string `json:"updatedYmdt"`
+type ParameterGroupOutput struct {
+	Header *ResponseHeader `json:"header"`
+	ParameterGroup
 }
 
-// ListBackupsOutput represents the response for listing backups
+type CreateParameterGroupInput struct {
+	Name        string `json:"parameterGroupName"`
+	Description string `json:"description,omitempty"`
+	DBVersion   string `json:"dbVersion"`
+}
+
+type ParameterGroupIDOutput struct {
+	Header           *ResponseHeader `json:"header"`
+	ParameterGroupID string          `json:"parameterGroupId"`
+}
+
+type ModifyParametersInput struct {
+	Parameters []ParameterValue `json:"modifiedParameters"`
+}
+
+type ParameterValue struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type Backup struct {
+	ID           string `json:"backupId"`
+	Name         string `json:"backupName"`
+	InstanceID   string `json:"dbInstanceId"`
+	InstanceName string `json:"dbInstanceName"`
+	Size         int64  `json:"backupSize"`
+	Status       string `json:"backupStatus"`
+	BackupType   string `json:"backupType,omitempty"`
+	CreatedAt    string `json:"createdYmdt"`
+}
+
 type ListBackupsOutput struct {
 	Header     *ResponseHeader `json:"header"`
-	TotalCount int             `json:"totalCounts"`
 	Backups    []Backup        `json:"backups"`
+	TotalCount int             `json:"totalCount,omitempty"`
 }
 
-// Subnet represents a subnet
+type CreateBackupInput struct {
+	BackupName string `json:"backupName"`
+}
+
+type RestoreBackupInput struct {
+	DBInstanceName string `json:"dbInstanceName"`
+}
+
+type DBUser struct {
+	ID        string `json:"dbUserId"`
+	Name      string `json:"dbUserName"`
+	CreatedAt string `json:"createdYmdt,omitempty"`
+	UpdatedAt string `json:"updatedYmdt,omitempty"`
+}
+
+type ListDBUsersOutput struct {
+	Header  *ResponseHeader `json:"header"`
+	DBUsers []DBUser        `json:"dbUsers"`
+}
+
+type CreateDBUserInput struct {
+	UserName string `json:"dbUserName"`
+	Password string `json:"dbUserPassword"`
+}
+
+type UpdateDBUserInput struct {
+	Password string `json:"dbUserPassword,omitempty"`
+}
+
+type Database struct {
+	ID        string `json:"databaseId"`
+	Name      string `json:"databaseName"`
+	CreatedAt string `json:"createdYmdt,omitempty"`
+}
+
+type ListDatabasesOutput struct {
+	Header    *ResponseHeader `json:"header"`
+	Databases []Database      `json:"databases"`
+}
+
+type CreateDatabaseInput struct {
+	DatabaseName string `json:"databaseName"`
+}
+
+type DatabaseIDOutput struct {
+	Header     *ResponseHeader `json:"header"`
+	DatabaseID string          `json:"databaseId"`
+}
+
 type Subnet struct {
 	ID               string `json:"subnetId"`
-	Name             string `json:"subnetName"`
-	CIDR             string `json:"subnetCidr"`
-	UsingGateway     bool   `json:"usingGateway"`
-	AvailableIPCount int    `json:"availableIpCount"`
+	SubnetName       string `json:"subnetName"`
+	SubnetCIDR       string `json:"subnetCidr"`
+	AvailabilityZone string `json:"availabilityZone"`
+	VPCName          string `json:"vpcName,omitempty"`
 }
 
-// ListSubnetsOutput represents the response for listing subnets
 type ListSubnetsOutput struct {
 	Header  *ResponseHeader `json:"header"`
 	Subnets []Subnet        `json:"subnets"`
 }
 
-// NetworkEndpoint represents a network endpoint
-type NetworkEndpoint struct {
-	Domain       string `json:"domain"`
-	IPAddress    string `json:"ipAddress"`
-	EndpointType string `json:"endPointType"`
-}
-
-// NetworkInfo represents network information for an instance
 type NetworkInfo struct {
-	Header           *ResponseHeader   `json:"header"`
-	AvailabilityZone string            `json:"availabilityZone"`
-	Subnet           Subnet            `json:"subnet"`
-	Endpoints        []NetworkEndpoint `json:"endPoints"`
+	SubnetID          string `json:"subnetId"`
+	UsePublicAccess   bool   `json:"usePublicAccess"`
+	AvailabilityZone  string `json:"availabilityZone,omitempty"`
+	PublicDomainName  string `json:"publicDomainName,omitempty"`
+	PrivateDomainName string `json:"privateDomainName,omitempty"`
 }
 
-// Extension represents a PostgreSQL extension
-type Extension struct {
-	Name    string `json:"extensionName"`
-	Version string `json:"extensionVersion"`
+type NetworkInfoOutput struct {
+	Header *ResponseHeader `json:"header"`
+	NetworkInfo
 }
 
-// ListExtensionsOutput represents the response for listing extensions
-type ListExtensionsOutput struct {
-	Header     *ResponseHeader `json:"header"`
-	Extensions []Extension     `json:"extensions"`
+type ModifyStorageInfoInput struct {
+	StorageSize int `json:"storageSize"`
 }
 
-// HBARule represents a pg_hba.conf rule
-type HBARule struct {
-	ID         string `json:"hbaRuleId"`
-	Type       string `json:"type"`
-	Database   string `json:"database"`
-	User       string `json:"user"`
-	Address    string `json:"address"`
-	AuthMethod string `json:"authMethod"`
-	Order      int    `json:"order"`
+type ModifyDeletionProtectionInput struct {
+	UseDeletionProtection bool `json:"useDeletionProtection"`
 }
 
-// ListHBARulesOutput represents the response for listing HBA rules
-type ListHBARulesOutput struct {
+type CreateReplicaInput struct {
+	DBInstanceName   string `json:"dbInstanceName"`
+	Description      string `json:"description,omitempty"`
+	DBFlavorID       string `json:"dbFlavorId,omitempty"`
+	AvailabilityZone string `json:"availabilityZone,omitempty"`
+}
+
+type EnableHAInput struct {
+	UseHighAvailability bool `json:"useHighAvailability"`
+	PingInterval        int  `json:"pingInterval,omitempty"`
+}
+
+type NotificationGroup struct {
+	ID           string   `json:"notificationGroupId"`
+	Name         string   `json:"notificationGroupName"`
+	NotifyEmail  bool     `json:"notifyEmail"`
+	NotifySMS    bool     `json:"notifySms"`
+	IsEnabled    bool     `json:"isEnabled"`
+	InstanceIDs  []string `json:"dbInstanceIds,omitempty"`
+	UserGroupIDs []string `json:"userGroupIds,omitempty"`
+	CreatedAt    string   `json:"createdYmdt,omitempty"`
+	UpdatedAt    string   `json:"updatedYmdt,omitempty"`
+}
+
+type ListNotificationGroupsOutput struct {
+	Header             *ResponseHeader     `json:"header"`
+	NotificationGroups []NotificationGroup `json:"notificationGroups"`
+}
+
+type NotificationGroupOutput struct {
+	Header *ResponseHeader `json:"header"`
+	NotificationGroup
+}
+
+type CreateNotificationGroupInput struct {
+	Name         string   `json:"notificationGroupName"`
+	NotifyEmail  bool     `json:"notifyEmail"`
+	NotifySMS    bool     `json:"notifySms"`
+	IsEnabled    bool     `json:"isEnabled"`
+	InstanceIDs  []string `json:"dbInstanceIds,omitempty"`
+	UserGroupIDs []string `json:"userGroupIds,omitempty"`
+}
+
+type NotificationGroupIDOutput struct {
+	Header              *ResponseHeader `json:"header"`
+	NotificationGroupID string          `json:"notificationGroupId"`
+}
+
+type LogFile struct {
+	FileName     string `json:"logFileName"`
+	FileSize     int64  `json:"logFileSize"`
+	LastModified string `json:"lastModifiedYmdt"`
+}
+
+type ListLogFilesOutput struct {
 	Header   *ResponseHeader `json:"header"`
-	HBARules []HBARule       `json:"hbaRules"`
+	LogFiles []LogFile       `json:"logFiles"`
 }
