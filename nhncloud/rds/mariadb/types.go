@@ -394,11 +394,22 @@ type ModifyDeletionProtectionInput struct {
 }
 
 type CreateReplicaInput struct {
-	DBInstanceName         string `json:"dbInstanceName"`
-	Description            string `json:"description,omitempty"`
-	DBFlavorID             string `json:"dbFlavorId,omitempty"`
-	AvailabilityZone       string `json:"availabilityZone,omitempty"`
-	UseDefaultNotification bool   `json:"useDefaultNotification,omitempty"`
+	DBInstanceName         string                `json:"dbInstanceName"`
+	Description            string                `json:"description,omitempty"`
+	DBFlavorID             string                `json:"dbFlavorId,omitempty"`
+	DBPort                 int                   `json:"dbPort,omitempty"`
+	ParameterGroupID       string                `json:"parameterGroupId,omitempty"`
+	DBSecurityGroupIDs     []string              `json:"dbSecurityGroupIds,omitempty"`
+	UseDefaultNotification bool                  `json:"useDefaultNotification,omitempty"`
+	UseDeletionProtection  bool                  `json:"useDeletionProtection,omitempty"`
+	Network                *ReplicaNetworkConfig `json:"network"`
+	Storage                *StorageConfig        `json:"storage,omitempty"`
+	Backup                 *BackupConfig         `json:"backup,omitempty"`
+}
+
+type ReplicaNetworkConfig struct {
+	AvailabilityZone string `json:"availabilityZone"`
+	UsePublicAccess  bool   `json:"usePublicAccess,omitempty"`
 }
 
 type EnableHAInput struct {
