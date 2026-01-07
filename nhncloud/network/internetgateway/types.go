@@ -35,5 +35,5 @@ type ExternalNetwork struct {
 }
 
 type ListExternalNetworksOutput struct {
-	Networks []ExternalNetwork `json:"networks"`
+	Networks []ExternalNetwork `json:"vpcs"`
 }

@@ -115,7 +115,7 @@ func (c *Client) ListExternalNetworks(ctx context.Context) (*ListExternalNetwork
 	}
 
 	var out ListExternalNetworksOutput
-	if err := c.httpClient.GET(ctx, "/v2.0/networks?router:external=true", &out); err != nil {
+	if err := c.httpClient.GET(ctx, "/v2.0/vpcs?router:external=true", &out); err != nil {
 		return nil, fmt.Errorf("list external networks: %w", err)
 	}
 	return &out, nil
