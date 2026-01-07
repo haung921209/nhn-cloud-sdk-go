@@ -45,9 +45,13 @@ func (c *Client) ensureClient(ctx context.Context) error {
 		return ErrNoCredentials
 	}
 
+	if _, err := c.tokenProvider.GetToken(ctx); err != nil {
+		return fmt.Errorf("authenticate: %w", err)
+	}
+
 	baseURL, err := c.tokenProvider.GetServiceEndpoint("object-store", c.region)
 	if err != nil {
-		return err
+		return fmt.Errorf("resolve endpoint: %w", err)
 	}
 
 	opts := []client.ClientOption{
