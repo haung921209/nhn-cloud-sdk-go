@@ -4,9 +4,13 @@ type Organization struct {
 	ID          string `json:"orgId"`
 	Name        string `json:"orgName"`
 	Description string `json:"description,omitempty"`
-	Status      string `json:"orgStatus"`
-	CreatedAt   string `json:"createdDateTime,omitempty"`
-	UpdatedAt   string `json:"modifiedDateTime,omitempty"`
+	Status      string `json:"orgStatusCode"`
+	CreatedAt   string `json:"regDateTime,omitempty"`
+	UpdatedAt   string `json:"modDateTime,omitempty"`
+}
+
+type OrganizationWrapper struct {
+	Org Organization `json:"org"`
 }
 
 type Project struct {
@@ -30,7 +34,15 @@ type Member struct {
 }
 
 type ListOrganizationsOutput struct {
-	Organizations []Organization `json:"orgList"`
+	OrganizationWrappers []OrganizationWrapper `json:"orgList"`
+}
+
+func (o *ListOrganizationsOutput) Organizations() []Organization {
+	orgs := make([]Organization, len(o.OrganizationWrappers))
+	for i, w := range o.OrganizationWrappers {
+		orgs[i] = w.Org
+	}
+	return orgs
 }
 
 type GetOrganizationOutput struct {
