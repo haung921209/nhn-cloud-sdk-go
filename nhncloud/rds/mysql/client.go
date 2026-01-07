@@ -434,7 +434,7 @@ func (c *Client) ModifyDeletionProtection(ctx context.Context, instanceID string
 	return &out, nil
 }
 
-func (c *Client) CreateReplica(ctx context.Context, instanceID string, input *CreateReplicaInput) (*JobOutput, error) {
+func (c *Client) CreateReplica(ctx context.Context, instanceID string, input *CreateReplicaRequest) (*JobOutput, error) {
 	var out JobOutput
 	if err := c.transport.POST(ctx, "/db-instances/"+instanceID+"/replicate", input, &out); err != nil {
 		return nil, err
