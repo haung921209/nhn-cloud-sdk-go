@@ -2,114 +2,89 @@
 package s3credential
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"time"
+
+	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/credentials"
+	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/internal/client"
 )
 
 // Client represents a S3 Credential API client
 type Client struct {
-	baseURL    string
-	token      string
-	httpClient *http.Client
-	debug      bool
+	region        string
+	credentials   credentials.IdentityCredentials
+	httpClient    *client.Client
+	tokenProvider *client.IdentityTokenProvider
+	debug         bool
 }
 
 // NewClient creates a new S3 Credential client
-func NewClient(region, token string, httpClient *http.Client, debug bool) *Client {
-	if httpClient == nil {
-		httpClient = &http.Client{Timeout: 30 * time.Second}
+func NewClient(region string, creds credentials.IdentityCredentials, hc *http.Client, debug bool) *Client {
+	c := &Client{
+		region:      region,
+		credentials: creds,
+		debug:       debug,
 	}
-	baseURL := fmt.Sprintf("https://api-identity-infrastructure.%s.nhncloudservice.com", region)
-	return &Client{
-		baseURL:    baseURL,
-		token:      token,
-		httpClient: httpClient,
-		debug:      debug,
+
+	if creds != nil {
+		c.tokenProvider = client.NewIdentityTokenProvider(
+			creds.GetTenantID(),
+			creds.GetUsername(),
+			creds.GetPassword(),
+		)
 	}
+
+	return c
 }
 
-// doRequest performs an HTTP request
-func (c *Client) doRequest(ctx context.Context, method, path string, body interface{}) ([]byte, error) {
-	var reqBody io.Reader
-	if body != nil {
-		jsonData, err := json.Marshal(body)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal request body: %w", err)
-		}
-		reqBody = bytes.NewReader(jsonData)
-		if c.debug {
-			fmt.Printf("[DEBUG] Request body: %s\n", string(jsonData))
-		}
+func (c *Client) ensureClient(ctx context.Context) error {
+	if c.httpClient != nil {
+		return nil
 	}
 
-	fullURL := c.baseURL + path
-	if c.debug {
-		fmt.Printf("[DEBUG] %s %s\n", method, fullURL)
+	if c.tokenProvider == nil {
+		return fmt.Errorf("no credentials provided")
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, fullURL, reqBody)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+	if _, err := c.tokenProvider.GetToken(ctx); err != nil {
+		return fmt.Errorf("authenticate: %w", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Auth-Token", c.token)
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+	baseURL := fmt.Sprintf("https://api-identity-infrastructure.%s.nhncloudservice.com", c.region)
+	opts := []client.ClientOption{
+		client.WithDebug(c.debug),
 	}
-	defer resp.Body.Close()
+	c.httpClient = client.NewClient(baseURL, c.tokenProvider, opts...)
 
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %w", err)
-	}
-
-	if c.debug {
-		fmt.Printf("[DEBUG] Response status: %d\n", resp.StatusCode)
-		fmt.Printf("[DEBUG] Response body: %s\n", string(respBody))
-	}
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(respBody))
-	}
-
-	return respBody, nil
+	return nil
 }
 
 // ListCredentials lists all S3 credentials for a user
 func (c *Client) ListCredentials(ctx context.Context, userID string) (*ListCredentialsOutput, error) {
-	path := fmt.Sprintf("/v2.0/users/%s/credentials/OS-EC2", userID)
-	data, err := c.doRequest(ctx, "GET", path, nil)
-	if err != nil {
+	if err := c.ensureClient(ctx); err != nil {
 		return nil, err
 	}
 
-	var credentials []S3Credential
-	if err := json.Unmarshal(data, &credentials); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	path := fmt.Sprintf("/v2.0/users/%s/credentials/OS-EC2", userID)
+	var creds []S3Credential
+	if err := c.httpClient.GET(ctx, path, &creds); err != nil {
+		return nil, fmt.Errorf("list credentials: %w", err)
 	}
 
-	return &ListCredentialsOutput{Credentials: credentials}, nil
+	return &ListCredentialsOutput{Credentials: creds}, nil
 }
 
 // CreateCredential creates a new S3 credential
 func (c *Client) CreateCredential(ctx context.Context, apiUserID string, input *CreateCredentialInput) (*CredentialOutput, error) {
-	path := fmt.Sprintf("/v2.0/users/%s/credentials/OS-EC2", apiUserID)
-	data, err := c.doRequest(ctx, "POST", path, input)
-	if err != nil {
+	if err := c.ensureClient(ctx); err != nil {
 		return nil, err
 	}
 
+	path := fmt.Sprintf("/v2.0/users/%s/credentials/OS-EC2", apiUserID)
 	var result CredentialOutput
-	if err := json.Unmarshal(data, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	if err := c.httpClient.POST(ctx, path, input, &result); err != nil {
+		return nil, fmt.Errorf("create credential: %w", err)
 	}
 
 	return &result, nil
@@ -117,7 +92,13 @@ func (c *Client) CreateCredential(ctx context.Context, apiUserID string, input *
 
 // DeleteCredential deletes an S3 credential
 func (c *Client) DeleteCredential(ctx context.Context, userID, accessKey string) error {
+	if err := c.ensureClient(ctx); err != nil {
+		return err
+	}
+
 	path := fmt.Sprintf("/v2.0/users/%s/credentials/OS-EC2/%s", userID, accessKey)
-	_, err := c.doRequest(ctx, "DELETE", path, nil)
-	return err
+	if err := c.httpClient.DELETE(ctx, path, nil); err != nil {
+		return fmt.Errorf("delete credential: %w", err)
+	}
+	return nil
 }
