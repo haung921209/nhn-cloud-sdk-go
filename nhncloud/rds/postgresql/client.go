@@ -24,11 +24,13 @@ func NewClient(region, appKey string, creds credentials.Credentials, debug bool)
 	}
 
 	if creds != nil {
-		opts = append(opts, transport.WithAppKeyAuth(
-			appKey,
+		// PostgreSQL v1.0 API uses OAuth2 Bearer token (X-NHN-AUTHORIZATION)
+		// unlike MySQL/MariaDB v3.0 which uses X-TC-AUTHENTICATION-ID/SECRET
+		tokenProvider := credentials.NewTokenProvider(
 			creds.GetAccessKeyID(),
 			creds.GetSecretAccessKey(),
-		))
+		)
+		opts = append(opts, transport.WithDynamicBearerAuth(appKey, tokenProvider))
 	}
 
 	return &Client{

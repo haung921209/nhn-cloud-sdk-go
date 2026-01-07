@@ -18,20 +18,23 @@ import (
 	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/errors"
 )
 
+type TokenProvider interface {
+	GetBearerToken() (string, error)
+}
+
 // Client is an HTTP client with retry support and middleware.
 type Client struct {
-	httpClient *http.Client
-	baseURL    string
-	headers    map[string]string
+	httpClient    *http.Client
+	baseURL       string
+	headers       map[string]string
+	tokenProvider TokenProvider
 
-	// Retry configuration
 	maxAttempts       int
 	initialBackoff    time.Duration
 	maxBackoff        time.Duration
 	backoffMultiplier float64
 	retryableCodes    map[int]bool
 
-	// Debug
 	debug bool
 }
 
@@ -119,6 +122,14 @@ func WithAppKeyAuth(appKey, accessKeyID, secretAccessKey string) ClientOption {
 func WithBearerAuth(token string) ClientOption {
 	return func(c *Client) {
 		c.headers["Authorization"] = "Bearer " + token
+	}
+}
+
+// WithDynamicBearerAuth sets dynamic Bearer token authentication using a token provider.
+func WithDynamicBearerAuth(appKey string, provider TokenProvider) ClientOption {
+	return func(c *Client) {
+		c.headers["X-TC-APP-KEY"] = appKey
+		c.tokenProvider = provider
 	}
 }
 
@@ -210,6 +221,15 @@ func (c *Client) doOnce(ctx context.Context, req *Request, attempt int) (*Respon
 	}
 	for k, v := range req.Headers {
 		httpReq.Header.Set(k, v)
+	}
+
+	// Set dynamic bearer token if provider exists (for OAuth2-based services like PostgreSQL)
+	if c.tokenProvider != nil {
+		token, err := c.tokenProvider.GetBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get bearer token: %w", err)
+		}
+		httpReq.Header.Set("X-NHN-AUTHORIZATION", "Bearer "+token)
 	}
 
 	// Debug logging
