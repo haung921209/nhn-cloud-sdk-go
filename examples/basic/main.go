@@ -51,7 +51,7 @@ func main() {
 	if err != nil {
 		log.Printf("Failed to list organizations: %v", err)
 	} else {
-		for _, org := range orgs.Organizations {
+		for _, org := range orgs.Organizations() {
 			fmt.Printf("  - %s (ID: %s, Status: %s)\n", org.Name, org.ID, org.Status)
 		}
 	}
@@ -91,12 +91,12 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to list MySQL instances: %v", err)
 		} else {
-			if len(instances.Instances) == 0 {
+			if len(instances.DBInstances) == 0 {
 				fmt.Println("  No MySQL instances found")
 			}
-			for _, inst := range instances.Instances {
+			for _, inst := range instances.DBInstances {
 				fmt.Printf("  - %s (ID: %s, Status: %s, Version: %s)\n",
-					inst.Name, inst.ID, inst.Status, inst.Version)
+					inst.DBInstanceName, inst.DBInstanceID, inst.DBInstanceStatus, inst.DBVersion)
 			}
 		}
 
@@ -105,12 +105,12 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to list MySQL flavors: %v", err)
 		} else {
-			for i, flavor := range mysqlFlavors.Flavors {
+			for i, flavor := range mysqlFlavors.DBFlavors {
 				if i >= 5 {
-					fmt.Printf("  ... and %d more\n", len(mysqlFlavors.Flavors)-5)
+					fmt.Printf("  ... and %d more\n", len(mysqlFlavors.DBFlavors)-5)
 					break
 				}
-				fmt.Printf("  - %s (VCPUs: %d, RAM: %dMB)\n", flavor.Name, flavor.VCPUs, flavor.RAM)
+				fmt.Printf("  - %s (VCPUs: %d, RAM: %dMB)\n", flavor.FlavorName, flavor.Vcpus, flavor.Ram)
 			}
 		}
 	}
