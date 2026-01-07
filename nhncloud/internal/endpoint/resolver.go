@@ -29,7 +29,7 @@ func Resolve(service Service, region string) string {
 
 	switch service {
 	case ServiceIAM:
-		return "https://oauth.api.nhncloudservice.com"
+		return "https://core.api.nhncloudservice.com"
 	case ServiceCompute:
 		return fmt.Sprintf("https://%s-api-instance-infrastructure.nhncloudservice.com", region)
 	case ServiceRDSMySQL:
