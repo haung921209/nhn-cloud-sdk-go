@@ -63,8 +63,15 @@ func Resolve(service Service, region string) string {
 
 func ResolveWithAppKey(service Service, region, appKey string) string {
 	base := Resolve(service, region)
-	if appKey != "" {
-		return base + "/appkeys/" + appKey
+	// RDS services use appkey in header (X-Tc-App-Key), not in URL path
+	// Only non-RDS services (like NCR, NCS) may need appkey in URL
+	switch service {
+	case ServiceRDSMySQL, ServiceRDSMariaDB, ServiceRDSPostgreSQL:
+		return base
+	default:
+		if appKey != "" {
+			return base + "/appkeys/" + appKey
+		}
+		return base
 	}
-	return base
 }
