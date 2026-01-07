@@ -47,12 +47,12 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to list MySQL instances: %v", err)
 		} else {
-			if len(instances.Instances) == 0 {
+			if len(instances.DBInstances) == 0 {
 				fmt.Println("  No MySQL instances found")
 			}
-			for _, inst := range instances.Instances {
+			for _, inst := range instances.DBInstances {
 				fmt.Printf("  - %s (ID: %s, Status: %s, Version: %s, Port: %d)\n",
-					inst.Name, inst.ID, inst.Status, inst.Version, inst.Port)
+					inst.DBInstanceName, inst.DBInstanceID, inst.DBInstanceStatus, inst.DBVersion, inst.DBPort)
 			}
 		}
 
@@ -61,12 +61,12 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to list MySQL flavors: %v", err)
 		} else {
-			for i, f := range flavors.Flavors {
+			for i, f := range flavors.DBFlavors {
 				if i >= 5 {
-					fmt.Printf("  ... and %d more\n", len(flavors.Flavors)-5)
+					fmt.Printf("  ... and %d more\n", len(flavors.DBFlavors)-5)
 					break
 				}
-				fmt.Printf("  - %s (VCPUs: %d, RAM: %dMB)\n", f.Name, f.VCPUs, f.RAM)
+				fmt.Printf("  - %s (VCPUs: %d, RAM: %dMB)\n", f.FlavorName, f.Vcpus, f.Ram)
 			}
 		}
 
@@ -75,8 +75,8 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to list MySQL versions: %v", err)
 		} else {
-			for _, v := range versions.Versions {
-				fmt.Printf("  - %s (%s)\n", v.DBVersion, v.DisplayName)
+			for _, v := range versions.DBVersions {
+				fmt.Printf("  - %s (%s)\n", v.DBVersion, v.DBVersionName)
 			}
 		}
 	}
@@ -87,12 +87,12 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to list MariaDB instances: %v", err)
 		} else {
-			if len(instances.Instances) == 0 {
+			if len(instances.DBInstances) == 0 {
 				fmt.Println("  No MariaDB instances found")
 			}
-			for _, inst := range instances.Instances {
+			for _, inst := range instances.DBInstances {
 				fmt.Printf("  - %s (ID: %s, Status: %s, Version: %s)\n",
-					inst.Name, inst.ID, inst.Status, inst.Version)
+					inst.DBInstanceName, inst.DBInstanceID, inst.DBInstanceStatus, inst.DBVersion)
 			}
 		}
 	}
@@ -103,12 +103,12 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to list PostgreSQL instances: %v", err)
 		} else {
-			if len(instances.Instances) == 0 {
+			if len(instances.DBInstances) == 0 {
 				fmt.Println("  No PostgreSQL instances found")
 			}
-			for _, inst := range instances.Instances {
+			for _, inst := range instances.DBInstances {
 				fmt.Printf("  - %s (ID: %s, Status: %s, Version: %s)\n",
-					inst.Name, inst.ID, inst.Status, inst.Version)
+					inst.DBInstanceName, inst.DBInstanceID, inst.DBInstanceStatus, inst.DBVersion)
 			}
 		}
 

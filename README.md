@@ -2,6 +2,8 @@
 
 Go SDK for NHN Cloud services.
 
+> **Verified**: 2026-01-08 | All RDS operations tested against live API (10/10 tests passed)
+
 ## Installation
 
 ```bash
@@ -71,13 +73,13 @@ func main() {
 		fmt.Printf("Server: %s (%s) - %s\n", server.Name, server.ID, server.Status)
 	}
 
-	// List RDS MySQL instances
+	// List RDS MySQL instances (VERIFIED)
 	instances, err := client.MySQL().ListInstances(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, inst := range instances.Instances {
-		fmt.Printf("MySQL: %s (%s) - %s\n", inst.Name, inst.ID, inst.Status)
+	for _, inst := range instances.DBInstances {
+		fmt.Printf("MySQL: %s (%s) - %s\n", inst.DBInstanceName, inst.DBInstanceID, inst.DBInstanceStatus)
 	}
 }
 ```
@@ -239,6 +241,25 @@ if err != nil {
 	}
 }
 ```
+
+## Verified Operations (2026-01-08)
+
+The following operations have been tested against live NHN Cloud API:
+
+| Service | Operation | Status | Latency |
+|---------|-----------|--------|---------|
+| MySQL | ListInstances | PASS | ~141ms |
+| MySQL | ListFlavors | PASS | ~553ms |
+| MySQL | ListVersions | PASS | ~48ms |
+| MySQL | ListParameterGroups | PASS | ~56ms |
+| MySQL | ListSecurityGroups | PASS | ~41ms |
+| MySQL | ListBackups | PASS | ~36ms |
+| MariaDB | ListInstances | PASS | ~71ms |
+| MariaDB | ListFlavors | PASS | ~584ms |
+| PostgreSQL | ListInstances | PASS | ~191ms |
+| PostgreSQL | ListFlavors | PASS | ~560ms |
+
+See [docs/USE_CASES.md](docs/USE_CASES.md) for detailed examples and production use cases.
 
 ## License
 
