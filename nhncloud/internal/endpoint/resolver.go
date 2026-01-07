@@ -37,7 +37,8 @@ func Resolve(service Service, region string) string {
 	case ServiceRDSMariaDB:
 		return fmt.Sprintf("https://%s-rds-mariadb.api.nhncloudservice.com/v3.0", region)
 	case ServiceRDSPostgreSQL:
-		return fmt.Sprintf("https://%s-rds-postgresql.api.nhncloudservice.com/v1.0", region)
+		// Note: NHN Cloud uses "rds-postgres" (not "rds-postgresql") in the endpoint
+		return fmt.Sprintf("https://%s-rds-postgres.api.nhncloudservice.com/v1.0", region)
 	case ServiceVPC:
 		return fmt.Sprintf("https://%s-api-network-infrastructure.nhncloudservice.com", region)
 	case ServiceSecurityGroup:
