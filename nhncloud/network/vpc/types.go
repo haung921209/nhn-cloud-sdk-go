@@ -76,17 +76,14 @@ type GetSubnetOutput struct {
 }
 
 type CreateSubnetInput struct {
-	Name           string   `json:"name"`
-	NetworkID      string   `json:"network_id"`
-	CIDR           string   `json:"cidr"`
-	GatewayIP      string   `json:"gateway_ip,omitempty"`
-	IPVersion      int      `json:"ip_version,omitempty"`
-	EnableDHCP     bool     `json:"enable_dhcp,omitempty"`
-	DNSNameservers []string `json:"dns_nameservers,omitempty"`
+	Name      string `json:"name"`
+	VPCID     string `json:"vpc_id"`
+	CIDR      string `json:"cidr"`
+	GatewayIP string `json:"gateway,omitempty"`
 }
 
 type CreateSubnetOutput struct {
-	Subnet Subnet `json:"subnet"`
+	VPCSubnet Subnet `json:"vpcsubnet"`
 }
 
 type ListRoutingTablesOutput struct {

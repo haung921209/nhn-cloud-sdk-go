@@ -151,9 +151,9 @@ func (c *Client) CreateSubnet(ctx context.Context, input *CreateSubnetInput) (*C
 		return nil, err
 	}
 
-	req := map[string]interface{}{"subnet": input}
+	req := map[string]interface{}{"vpcsubnet": input}
 	var out CreateSubnetOutput
-	if err := c.httpClient.POST(ctx, "/v2.0/subnets", req, &out); err != nil {
+	if err := c.httpClient.POST(ctx, "/v2.0/vpcsubnets", req, &out); err != nil {
 		return nil, fmt.Errorf("create subnet: %w", err)
 	}
 	return &out, nil
@@ -164,7 +164,7 @@ func (c *Client) DeleteSubnet(ctx context.Context, subnetID string) error {
 		return err
 	}
 
-	if err := c.httpClient.DELETE(ctx, "/v2.0/subnets/"+subnetID, nil); err != nil {
+	if err := c.httpClient.DELETE(ctx, "/v2.0/vpcsubnets/"+subnetID, nil); err != nil {
 		return fmt.Errorf("delete subnet %s: %w", subnetID, err)
 	}
 	return nil

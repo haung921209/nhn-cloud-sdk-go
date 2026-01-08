@@ -28,7 +28,7 @@ type CreateNATGatewayInput struct {
 	Description  string `json:"description,omitempty"`
 	VPCID        string `json:"vpc_id"`
 	SubnetID     string `json:"subnet_id"`
-	FloatingIPID string `json:"floatingip_id,omitempty"`
+	FloatingIPID string `json:"floatingips_id,omitempty"`
 }
 
 type CreateNATGatewayRequest struct {

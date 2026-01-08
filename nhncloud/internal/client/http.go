@@ -76,7 +76,17 @@ func (c *Client) Request(ctx context.Context, method, endpoint string, body inte
 	if err != nil {
 		return fmt.Errorf("invalid base URL: %w", err)
 	}
-	u.Path = path.Join(u.Path, endpoint)
+
+	endpointPath := endpoint
+	endpointQuery := ""
+	if idx := strings.Index(endpoint, "?"); idx != -1 {
+		endpointPath = endpoint[:idx]
+		endpointQuery = endpoint[idx+1:]
+	}
+	u.Path = path.Join(u.Path, endpointPath)
+	if endpointQuery != "" {
+		u.RawQuery = endpointQuery
+	}
 
 	var reqBody io.Reader
 	var contentType string
