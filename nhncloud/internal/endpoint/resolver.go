@@ -56,7 +56,7 @@ func Resolve(service Service, region string) string {
 	case ServiceNCR:
 		return "https://kr1-ncr.api.nhncloudservice.com"
 	case ServiceNCS:
-		return "https://ncs.api.nhncloudservice.com"
+		return fmt.Sprintf("https://%s-ncs.api.nhncloudservice.com/ncs/v1.0", region)
 	default:
 		return ""
 	}

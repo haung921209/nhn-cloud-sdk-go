@@ -134,3 +134,14 @@ type ResizeInput struct {
 		FlavorRef string `json:"flavorRef"`
 	} `json:"resize"`
 }
+
+type AvailabilityZone struct {
+	ZoneName  string `json:"zoneName"`
+	ZoneState struct {
+		Available bool `json:"available"`
+	} `json:"zoneState"`
+}
+
+type ListAvailabilityZonesOutput struct {
+	AvailabilityZoneInfo []AvailabilityZone `json:"availabilityZoneInfo"`
+}

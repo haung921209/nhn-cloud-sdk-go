@@ -10,6 +10,7 @@ import (
 	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/iam"
 	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/network/floatingip"
 	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/network/loadbalancer"
+	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/network/port"
 	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/network/securitygroup"
 	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/network/vpc"
 	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/rds/mariadb"
@@ -31,6 +32,7 @@ type Client struct {
 	vpcClient     *vpc.Client
 	sgClient      *securitygroup.Client
 	fipClient     *floatingip.Client
+	portClient    *port.Client
 	lbClient      *loadbalancer.Client
 	blockClient   *block.Client
 	objectClient  *object.Client
@@ -122,6 +124,15 @@ func (c *Client) FloatingIP() *floatingip.Client {
 		c.fipClient = floatingip.NewClient(c.config.Region, c.config.IdentityCredentials, c.config.httpClient(), c.config.Debug)
 	}
 	return c.fipClient
+}
+
+func (c *Client) Port() *port.Client {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.portClient == nil {
+		c.portClient = port.NewClient(c.config.Region, c.config.IdentityCredentials, c.config.httpClient(), c.config.Debug)
+	}
+	return c.portClient
 }
 
 func (c *Client) LoadBalancer() *loadbalancer.Client {

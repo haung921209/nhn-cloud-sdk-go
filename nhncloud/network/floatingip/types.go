@@ -45,7 +45,7 @@ type CreateFloatingIPOutput struct {
 
 // UpdateFloatingIPInput represents the input for updating a floating IP
 type UpdateFloatingIPInput struct {
-	PortID         *string `json:"port_id,omitempty"`
+	PortID         *string `json:"port_id"`
 	FixedIPAddress string  `json:"fixed_ip_address,omitempty"`
 	Description    string  `json:"description,omitempty"`
 }

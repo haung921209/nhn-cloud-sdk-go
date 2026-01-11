@@ -46,16 +46,9 @@ type SubnetsResponse struct {
 	Subnets []Subnet        `json:"subnets"`
 }
 
-// Storage Types
-type StorageType struct {
-	StorageType string `json:"storageType"`
-	MinSize     int    `json:"minSize"`
-	MaxSize     int    `json:"maxSize"`
-}
-
 type StorageTypesResponse struct {
 	Header       *ResponseHeader `json:"header"`
-	StorageTypes []StorageType   `json:"storageTypes"`
+	StorageTypes []string        `json:"storageTypes"`
 }
 
 // DB Flavors & Versions
@@ -83,6 +76,12 @@ type DBVersionsResponse struct {
 	DBVersions []DBVersion     `json:"dbVersions"`
 }
 
+type BackupSchedule struct {
+	BackupWndBgnTime      string `json:"backupWndBgnTime"`
+	BackupWndDuration     string `json:"backupWndDuration"`
+	BackupRetryExpireTime string `json:"backupRetryExpireTime,omitempty"`
+}
+
 // DB Instance Group
 type DBInstanceGroup struct {
 	DBInstanceGroupID   string    `json:"dbInstanceGroupId"`
@@ -102,7 +101,6 @@ type DBInstanceGroupResponse struct {
 	DBInstanceGroup
 }
 
-// DB Instance
 type DBInstance struct {
 	DBInstanceID              string    `json:"dbInstanceId"`
 	DBInstanceGroupID         string    `json:"dbInstanceGroupId"`
@@ -121,6 +119,8 @@ type DBInstance struct {
 	NeedToApplyParameterGroup bool      `json:"needToApplyParameterGroup"`
 	NeedMigration             bool      `json:"needMigration"`
 	OSVersion                 string    `json:"osVersion,omitempty"`
+	StorageType               string    `json:"storageType,omitempty"`
+	StorageSize               int       `json:"storageSize,omitempty"`
 	CreatedYmdt               time.Time `json:"createdYmdt"`
 	UpdatedYmdt               time.Time `json:"updatedYmdt"`
 }
@@ -161,12 +161,8 @@ type CreateDBInstanceRequest struct {
 		StorageSize int    `json:"storageSize"`
 	} `json:"storage"`
 	Backup struct {
-		BackupPeriod    int `json:"backupPeriod"`
-		BackupSchedules []struct {
-			BackupWndBgnTime      string `json:"backupWndBgnTime"`
-			BackupWndDuration     string `json:"backupWndDuration"`
-			BackupRetryExpireTime string `json:"backupRetryExpireTime"`
-		} `json:"backupSchedules,omitempty"`
+		BackupPeriod    int              `json:"backupPeriod"`
+		BackupSchedules []BackupSchedule `json:"backupSchedules,omitempty"`
 	} `json:"backup"`
 }
 
@@ -283,8 +279,9 @@ type DBUsersResponse struct {
 }
 
 type CreateDBUserRequest struct {
-	UserName        string `json:"userName"`
-	UserPassword    string `json:"userPassword"`
+	DBUserName      string `json:"dbUserName"`
+	DBPassword      string `json:"dbPassword"`
+	AuthorityType   string `json:"authorityType,omitempty"`
 	IsSuperuser     bool   `json:"isSuperuser,omitempty"`
 	CanCreateDB     bool   `json:"canCreateDb,omitempty"`
 	CanCreateRole   bool   `json:"canCreateRole,omitempty"`

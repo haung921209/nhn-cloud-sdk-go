@@ -185,14 +185,30 @@ func (c *Client) Do(ctx context.Context, req *Request) (*Response, error) {
 }
 
 func (c *Client) doOnce(ctx context.Context, req *Request, attempt int) (*Response, error) {
-	// Build URL
 	u, err := url.Parse(c.baseURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base URL: %w", err)
 	}
-	u.Path = path.Join(u.Path, req.Path)
-	if req.Query != nil {
-		u.RawQuery = req.Query.Encode()
+
+	reqPath := req.Path
+	var pathQuery url.Values
+	if idx := strings.Index(reqPath, "?"); idx != -1 {
+		queryStr := reqPath[idx+1:]
+		reqPath = reqPath[:idx]
+		pathQuery, _ = url.ParseQuery(queryStr)
+	}
+
+	u.Path = path.Join(u.Path, reqPath)
+
+	query := make(url.Values)
+	for k, v := range pathQuery {
+		query[k] = v
+	}
+	for k, v := range req.Query {
+		query[k] = v
+	}
+	if len(query) > 0 {
+		u.RawQuery = query.Encode()
 	}
 
 	// Prepare body
@@ -261,9 +277,17 @@ func (c *Client) doOnce(ctx context.Context, req *Request, attempt int) (*Respon
 		Body:       body,
 	}
 
-	// Handle error responses
+	// Handle HTTP error responses
 	if httpResp.StatusCode >= 400 {
 		return resp, c.parseErrorResponse(resp)
+	}
+
+	// Handle API-level errors (HTTP 200 but isSuccessful=false)
+	// NHN Cloud APIs return HTTP 200 with error details in body
+	if len(body) > 0 {
+		if apiErr := c.checkAPIError(resp); apiErr != nil {
+			return resp, apiErr
+		}
 	}
 
 	return resp, nil
@@ -283,7 +307,6 @@ func (c *Client) jitteredBackoff(base time.Duration) time.Duration {
 }
 
 func (c *Client) parseErrorResponse(resp *Response) error {
-	// Try to parse API error from response body
 	var apiResp struct {
 		Header struct {
 			ResultCode    int    `json:"resultCode"`
@@ -310,6 +333,27 @@ func (c *Client) parseErrorResponse(resp *Response) error {
 
 	requestID := resp.Headers.Get("X-Request-Id")
 	return errors.FromHTTPResponse(resp.StatusCode, code, message, requestID)
+}
+
+func (c *Client) checkAPIError(resp *Response) error {
+	var apiResp struct {
+		Header struct {
+			ResultCode    int    `json:"resultCode"`
+			ResultMessage string `json:"resultMessage"`
+			IsSuccessful  bool   `json:"isSuccessful"`
+		} `json:"header"`
+	}
+
+	if err := json.Unmarshal(resp.Body, &apiResp); err != nil {
+		return nil
+	}
+
+	if apiResp.Header.ResultCode != 0 && !apiResp.Header.IsSuccessful {
+		requestID := resp.Headers.Get("X-Request-Id")
+		return errors.FromHTTPResponse(resp.StatusCode, fmt.Sprintf("%d", apiResp.Header.ResultCode), apiResp.Header.ResultMessage, requestID)
+	}
+
+	return nil
 }
 
 func (c *Client) logRequest(req *http.Request, body interface{}, attempt int) {

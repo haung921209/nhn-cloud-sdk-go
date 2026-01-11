@@ -209,15 +209,9 @@ func (c *Client) DeleteSecurityGroupRule(ctx context.Context, securityGroupID, r
 	return &out, nil
 }
 
-// Parameter Groups
-
-func (c *Client) ListParameterGroups(ctx context.Context, dbVersion string) (*ListParameterGroupsOutput, error) {
-	path := "/parameter-groups"
-	if dbVersion != "" {
-		path += "?dbVersion=" + url.QueryEscape(dbVersion)
-	}
+func (c *Client) ListParameterGroups(ctx context.Context) (*ListParameterGroupsOutput, error) {
 	var out ListParameterGroupsOutput
-	if err := c.transport.GET(ctx, path, &out); err != nil {
+	if err := c.transport.GET(ctx, "/parameter-groups", &out); err != nil {
 		return nil, err
 	}
 	return &out, nil

@@ -313,3 +313,183 @@ func (c *Client) DeleteHealthMonitor(ctx context.Context, monitorID string) erro
 	}
 	return nil
 }
+
+func (c *Client) UpdateListener(ctx context.Context, listenerID string, input *UpdateListenerInput) (*GetListenerOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	req := &UpdateListenerRequest{Listener: *input}
+	var out GetListenerOutput
+	if err := c.httpClient.PUT(ctx, "/v2.0/lbaas/listeners/"+listenerID, req, &out); err != nil {
+		return nil, fmt.Errorf("update listener %s: %w", listenerID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdatePool(ctx context.Context, poolID string, input *UpdatePoolInput) (*GetPoolOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	req := &UpdatePoolRequest{Pool: *input}
+	var out GetPoolOutput
+	if err := c.httpClient.PUT(ctx, "/v2.0/lbaas/pools/"+poolID, req, &out); err != nil {
+		return nil, fmt.Errorf("update pool %s: %w", poolID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateMember(ctx context.Context, poolID, memberID string, input *UpdateMemberInput) (*GetMemberOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	req := &UpdateMemberRequest{Member: *input}
+	var out GetMemberOutput
+	path := fmt.Sprintf("/v2.0/lbaas/pools/%s/members/%s", poolID, memberID)
+	if err := c.httpClient.PUT(ctx, path, req, &out); err != nil {
+		return nil, fmt.Errorf("update member %s: %w", memberID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateHealthMonitor(ctx context.Context, monitorID string, input *UpdateHealthMonitorInput) (*GetHealthMonitorOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	req := &UpdateHealthMonitorRequest{HealthMonitor: *input}
+	var out GetHealthMonitorOutput
+	if err := c.httpClient.PUT(ctx, "/v2.0/lbaas/healthmonitors/"+monitorID, req, &out); err != nil {
+		return nil, fmt.Errorf("update health monitor %s: %w", monitorID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) ListL7Policies(ctx context.Context) (*ListL7PoliciesOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	var out ListL7PoliciesOutput
+	if err := c.httpClient.GET(ctx, "/v2.0/lbaas/l7policies", &out); err != nil {
+		return nil, fmt.Errorf("list l7 policies: %w", err)
+	}
+	return &out, nil
+}
+
+func (c *Client) GetL7Policy(ctx context.Context, policyID string) (*GetL7PolicyOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	var out GetL7PolicyOutput
+	if err := c.httpClient.GET(ctx, "/v2.0/lbaas/l7policies/"+policyID, &out); err != nil {
+		return nil, fmt.Errorf("get l7 policy %s: %w", policyID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) CreateL7Policy(ctx context.Context, input *CreateL7PolicyInput) (*GetL7PolicyOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	req := &CreateL7PolicyRequest{L7Policy: *input}
+	var out GetL7PolicyOutput
+	if err := c.httpClient.POST(ctx, "/v2.0/lbaas/l7policies", req, &out); err != nil {
+		return nil, fmt.Errorf("create l7 policy: %w", err)
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateL7Policy(ctx context.Context, policyID string, input *UpdateL7PolicyInput) (*GetL7PolicyOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	req := &UpdateL7PolicyRequest{L7Policy: *input}
+	var out GetL7PolicyOutput
+	if err := c.httpClient.PUT(ctx, "/v2.0/lbaas/l7policies/"+policyID, req, &out); err != nil {
+		return nil, fmt.Errorf("update l7 policy %s: %w", policyID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) DeleteL7Policy(ctx context.Context, policyID string) error {
+	if err := c.ensureClient(ctx); err != nil {
+		return err
+	}
+
+	if err := c.httpClient.DELETE(ctx, "/v2.0/lbaas/l7policies/"+policyID, nil); err != nil {
+		return fmt.Errorf("delete l7 policy %s: %w", policyID, err)
+	}
+	return nil
+}
+
+func (c *Client) ListL7Rules(ctx context.Context, policyID string) (*ListL7RulesOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	var out ListL7RulesOutput
+	path := fmt.Sprintf("/v2.0/lbaas/l7policies/%s/rules", policyID)
+	if err := c.httpClient.GET(ctx, path, &out); err != nil {
+		return nil, fmt.Errorf("list l7 rules: %w", err)
+	}
+	return &out, nil
+}
+
+func (c *Client) GetL7Rule(ctx context.Context, policyID, ruleID string) (*GetL7RuleOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	var out GetL7RuleOutput
+	path := fmt.Sprintf("/v2.0/lbaas/l7policies/%s/rules/%s", policyID, ruleID)
+	if err := c.httpClient.GET(ctx, path, &out); err != nil {
+		return nil, fmt.Errorf("get l7 rule %s: %w", ruleID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) CreateL7Rule(ctx context.Context, policyID string, input *CreateL7RuleInput) (*GetL7RuleOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	req := &CreateL7RuleRequest{Rule: *input}
+	var out GetL7RuleOutput
+	path := fmt.Sprintf("/v2.0/lbaas/l7policies/%s/rules", policyID)
+	if err := c.httpClient.POST(ctx, path, req, &out); err != nil {
+		return nil, fmt.Errorf("create l7 rule: %w", err)
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateL7Rule(ctx context.Context, policyID, ruleID string, input *UpdateL7RuleInput) (*GetL7RuleOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	req := &UpdateL7RuleRequest{Rule: *input}
+	var out GetL7RuleOutput
+	path := fmt.Sprintf("/v2.0/lbaas/l7policies/%s/rules/%s", policyID, ruleID)
+	if err := c.httpClient.PUT(ctx, path, req, &out); err != nil {
+		return nil, fmt.Errorf("update l7 rule %s: %w", ruleID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) DeleteL7Rule(ctx context.Context, policyID, ruleID string) error {
+	if err := c.ensureClient(ctx); err != nil {
+		return err
+	}
+
+	path := fmt.Sprintf("/v2.0/lbaas/l7policies/%s/rules/%s", policyID, ruleID)
+	if err := c.httpClient.DELETE(ctx, path, nil); err != nil {
+		return fmt.Errorf("delete l7 rule %s: %w", ruleID, err)
+	}
+	return nil
+}

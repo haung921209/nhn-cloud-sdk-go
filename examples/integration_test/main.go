@@ -141,7 +141,7 @@ func testMySQLListVersions(ctx context.Context, client *nhncloud.Client) {
 
 func testMySQLListParameterGroups(ctx context.Context, client *nhncloud.Client) {
 	start := time.Now()
-	groups, err := client.MySQL().ListParameterGroups(ctx, "")
+	groups, err := client.MySQL().ListParameterGroups(ctx)
 	latency := time.Since(start)
 
 	if err != nil {

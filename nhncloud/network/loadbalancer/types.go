@@ -1,23 +1,26 @@
 package loadbalancer
 
-// LoadBalancer represents a load balancer
+type IDReference struct {
+	ID string `json:"id"`
+}
+
 type LoadBalancer struct {
-	ID                 string   `json:"id"`
-	Name               string   `json:"name"`
-	Description        string   `json:"description,omitempty"`
-	TenantID           string   `json:"tenant_id"`
-	VIPAddress         string   `json:"vip_address"`
-	VIPPortID          string   `json:"vip_port_id"`
-	VIPSubnetID        string   `json:"vip_subnet_id"`
-	VIPNetworkID       string   `json:"vip_network_id"`
-	ProvisioningStatus string   `json:"provisioning_status"`
-	OperatingStatus    string   `json:"operating_status"`
-	AdminStateUp       bool     `json:"admin_state_up"`
-	Provider           string   `json:"provider"`
-	Listeners          []string `json:"listeners,omitempty"`
-	Pools              []string `json:"pools,omitempty"`
-	CreatedAt          string   `json:"created_at"`
-	UpdatedAt          string   `json:"updated_at"`
+	ID                 string        `json:"id"`
+	Name               string        `json:"name"`
+	Description        string        `json:"description,omitempty"`
+	TenantID           string        `json:"tenant_id"`
+	VIPAddress         string        `json:"vip_address"`
+	VIPPortID          string        `json:"vip_port_id"`
+	VIPSubnetID        string        `json:"vip_subnet_id"`
+	VIPNetworkID       string        `json:"vip_network_id"`
+	ProvisioningStatus string        `json:"provisioning_status"`
+	OperatingStatus    string        `json:"operating_status"`
+	AdminStateUp       bool          `json:"admin_state_up"`
+	Provider           string        `json:"provider"`
+	Listeners          []IDReference `json:"listeners,omitempty"`
+	Pools              []IDReference `json:"pools,omitempty"`
+	CreatedAt          string        `json:"created_at"`
+	UpdatedAt          string        `json:"updated_at"`
 }
 
 // ListLoadBalancersOutput represents the response for listing load balancers
@@ -250,7 +253,167 @@ type CreateHealthMonitorInput struct {
 	AdminStateUp   *bool  `json:"admin_state_up,omitempty"`
 }
 
-// CreateHealthMonitorRequest wraps the create input
 type CreateHealthMonitorRequest struct {
 	HealthMonitor CreateHealthMonitorInput `json:"healthmonitor"`
+}
+
+type UpdateListenerInput struct {
+	Name                   string `json:"name,omitempty"`
+	Description            string `json:"description,omitempty"`
+	DefaultPoolID          string `json:"default_pool_id,omitempty"`
+	ConnectionLimit        *int   `json:"connection_limit,omitempty"`
+	AdminStateUp           *bool  `json:"admin_state_up,omitempty"`
+	DefaultTLSContainerRef string `json:"default_tls_container_ref,omitempty"`
+}
+
+type UpdateListenerRequest struct {
+	Listener UpdateListenerInput `json:"listener"`
+}
+
+type UpdatePoolInput struct {
+	Name               string              `json:"name,omitempty"`
+	Description        string              `json:"description,omitempty"`
+	LBAlgorithm        string              `json:"lb_algorithm,omitempty"`
+	AdminStateUp       *bool               `json:"admin_state_up,omitempty"`
+	SessionPersistence *SessionPersistence `json:"session_persistence,omitempty"`
+}
+
+type UpdatePoolRequest struct {
+	Pool UpdatePoolInput `json:"pool"`
+}
+
+type UpdateMemberInput struct {
+	Name         string `json:"name,omitempty"`
+	Weight       *int   `json:"weight,omitempty"`
+	AdminStateUp *bool  `json:"admin_state_up,omitempty"`
+}
+
+type UpdateMemberRequest struct {
+	Member UpdateMemberInput `json:"member"`
+}
+
+type UpdateHealthMonitorInput struct {
+	Name           string `json:"name,omitempty"`
+	Delay          *int   `json:"delay,omitempty"`
+	Timeout        *int   `json:"timeout,omitempty"`
+	MaxRetries     *int   `json:"max_retries,omitempty"`
+	MaxRetriesDown *int   `json:"max_retries_down,omitempty"`
+	HTTPMethod     string `json:"http_method,omitempty"`
+	URLPath        string `json:"url_path,omitempty"`
+	ExpectedCodes  string `json:"expected_codes,omitempty"`
+	AdminStateUp   *bool  `json:"admin_state_up,omitempty"`
+}
+
+type UpdateHealthMonitorRequest struct {
+	HealthMonitor UpdateHealthMonitorInput `json:"healthmonitor"`
+}
+
+type L7Policy struct {
+	ID                 string        `json:"id"`
+	Name               string        `json:"name"`
+	Description        string        `json:"description,omitempty"`
+	TenantID           string        `json:"tenant_id"`
+	ListenerID         string        `json:"listener_id"`
+	Action             string        `json:"action"`
+	Position           int           `json:"position"`
+	RedirectPoolID     string        `json:"redirect_pool_id,omitempty"`
+	RedirectURL        string        `json:"redirect_url,omitempty"`
+	RedirectPrefix     string        `json:"redirect_prefix,omitempty"`
+	RedirectHTTPCode   int           `json:"redirect_http_code,omitempty"`
+	AdminStateUp       bool          `json:"admin_state_up"`
+	ProvisioningStatus string        `json:"provisioning_status"`
+	OperatingStatus    string        `json:"operating_status"`
+	Rules              []IDReference `json:"rules,omitempty"`
+	CreatedAt          string        `json:"created_at"`
+	UpdatedAt          string        `json:"updated_at"`
+}
+
+type ListL7PoliciesOutput struct {
+	L7Policies []L7Policy `json:"l7policies"`
+}
+
+type GetL7PolicyOutput struct {
+	L7Policy L7Policy `json:"l7policy"`
+}
+
+type CreateL7PolicyInput struct {
+	Name             string `json:"name,omitempty"`
+	Description      string `json:"description,omitempty"`
+	ListenerID       string `json:"listener_id"`
+	Action           string `json:"action"`
+	Position         *int   `json:"position,omitempty"`
+	RedirectPoolID   string `json:"redirect_pool_id,omitempty"`
+	RedirectURL      string `json:"redirect_url,omitempty"`
+	RedirectPrefix   string `json:"redirect_prefix,omitempty"`
+	RedirectHTTPCode *int   `json:"redirect_http_code,omitempty"`
+	AdminStateUp     *bool  `json:"admin_state_up,omitempty"`
+}
+
+type CreateL7PolicyRequest struct {
+	L7Policy CreateL7PolicyInput `json:"l7policy"`
+}
+
+type UpdateL7PolicyInput struct {
+	Name             string `json:"name,omitempty"`
+	Description      string `json:"description,omitempty"`
+	Action           string `json:"action,omitempty"`
+	Position         *int   `json:"position,omitempty"`
+	RedirectPoolID   string `json:"redirect_pool_id,omitempty"`
+	RedirectURL      string `json:"redirect_url,omitempty"`
+	RedirectPrefix   string `json:"redirect_prefix,omitempty"`
+	RedirectHTTPCode *int   `json:"redirect_http_code,omitempty"`
+	AdminStateUp     *bool  `json:"admin_state_up,omitempty"`
+}
+
+type UpdateL7PolicyRequest struct {
+	L7Policy UpdateL7PolicyInput `json:"l7policy"`
+}
+
+type L7Rule struct {
+	ID                 string `json:"id"`
+	TenantID           string `json:"tenant_id"`
+	Type               string `json:"type"`
+	CompareType        string `json:"compare_type"`
+	Key                string `json:"key,omitempty"`
+	Value              string `json:"value"`
+	Invert             bool   `json:"invert"`
+	AdminStateUp       bool   `json:"admin_state_up"`
+	ProvisioningStatus string `json:"provisioning_status"`
+	OperatingStatus    string `json:"operating_status"`
+	CreatedAt          string `json:"created_at"`
+	UpdatedAt          string `json:"updated_at"`
+}
+
+type ListL7RulesOutput struct {
+	Rules []L7Rule `json:"rules"`
+}
+
+type GetL7RuleOutput struct {
+	Rule L7Rule `json:"rule"`
+}
+
+type CreateL7RuleInput struct {
+	Type         string `json:"type"`
+	CompareType  string `json:"compare_type"`
+	Key          string `json:"key,omitempty"`
+	Value        string `json:"value"`
+	Invert       *bool  `json:"invert,omitempty"`
+	AdminStateUp *bool  `json:"admin_state_up,omitempty"`
+}
+
+type CreateL7RuleRequest struct {
+	Rule CreateL7RuleInput `json:"rule"`
+}
+
+type UpdateL7RuleInput struct {
+	Type         string `json:"type,omitempty"`
+	CompareType  string `json:"compare_type,omitempty"`
+	Key          string `json:"key,omitempty"`
+	Value        string `json:"value,omitempty"`
+	Invert       *bool  `json:"invert,omitempty"`
+	AdminStateUp *bool  `json:"admin_state_up,omitempty"`
+}
+
+type UpdateL7RuleRequest struct {
+	Rule UpdateL7RuleInput `json:"rule"`
 }
