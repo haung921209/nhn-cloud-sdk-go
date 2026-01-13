@@ -98,8 +98,7 @@ func (c *Client) StopInstance(ctx context.Context, instanceID string) (*JobOutpu
 	return &out, nil
 }
 
-func (c *Client) RestartInstance(ctx context.Context, instanceID string, useOnlineFailover bool) (*JobOutput, error) {
-	req := map[string]interface{}{"useOnlineFailover": useOnlineFailover}
+func (c *Client) RestartInstance(ctx context.Context, instanceID string, req *RestartInstanceRequest) (*JobOutput, error) {
 	var out JobOutput
 	if err := c.transport.POST(ctx, "/db-instances/"+instanceID+"/restart", req, &out); err != nil {
 		return nil, err
@@ -128,6 +127,30 @@ func (c *Client) ListInstanceGroups(ctx context.Context) (*ListInstanceGroupsOut
 func (c *Client) GetInstanceGroup(ctx context.Context, groupID string) (*InstanceGroupOutput, error) {
 	var out InstanceGroupOutput
 	if err := c.transport.GET(ctx, "/db-instance-groups/"+groupID, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) CreateInstanceGroup(ctx context.Context, req *CreateInstanceGroupRequest) (*JobOutput, error) {
+	var out JobOutput
+	if err := c.transport.POST(ctx, "/db-instance-groups", req, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateInstanceGroup(ctx context.Context, groupID string, req *UpdateInstanceGroupRequest) (*JobOutput, error) {
+	var out JobOutput
+	if err := c.transport.PUT(ctx, "/db-instance-groups/"+groupID, req, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) DeleteInstanceGroup(ctx context.Context, groupID string) (*JobOutput, error) {
+	var out JobOutput
+	if err := c.transport.DELETE(ctx, "/db-instance-groups/"+groupID, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -347,6 +370,15 @@ func (c *Client) DeleteDatabase(ctx context.Context, instanceID, databaseID stri
 	return &out, nil
 }
 
+func (c *Client) UpdateDatabase(ctx context.Context, instanceID, databaseID string, newOwner string) (*JobOutput, error) {
+	req := map[string]string{"owner": newOwner}
+	var out JobOutput
+	if err := c.transport.PUT(ctx, "/db-instances/"+instanceID+"/databases/"+databaseID, req, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // Network
 
 func (c *Client) ListSubnets(ctx context.Context) (*ListSubnetsOutput, error) {
@@ -481,6 +513,247 @@ func (c *Client) DeleteNotificationGroup(ctx context.Context, notificationGroupI
 func (c *Client) ListLogFiles(ctx context.Context, instanceID string) (*ListLogFilesOutput, error) {
 	var out ListLogFilesOutput
 	if err := c.transport.GET(ctx, "/db-instances/"+instanceID+"/log-files", &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) DownloadLogFile(ctx context.Context, instanceID, logFileID string) (string, error) {
+	var out struct {
+		Header      *ResponseHeader `json:"header"`
+		DownloadURL string          `json:"downloadUrl"`
+	}
+	if err := c.transport.GET(ctx, "/db-instances/"+instanceID+"/log-files/"+logFileID+"/download", &out); err != nil {
+		return "", err
+	}
+	return out.DownloadURL, nil
+}
+
+func (c *Client) ListRegions(ctx context.Context) (*RegionsResponse, error) {
+	var out RegionsResponse
+	if err := c.transport.GET(ctx, "/project/regions", &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) ListMembers(ctx context.Context) (*MembersResponse, error) {
+	var out MembersResponse
+	if err := c.transport.GET(ctx, "/project/members", &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// HBA Rules
+
+func (c *Client) ListHBARules(ctx context.Context, instanceID string) (*HBARulesResponse, error) {
+	var out HBARulesResponse
+	if err := c.transport.GET(ctx, "/db-instances/"+instanceID+"/hba-rules", &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) GetHBARule(ctx context.Context, instanceID, ruleID string) (*HBARule, error) {
+	var out struct {
+		Header  *ResponseHeader `json:"header"`
+		HBARule HBARule         `json:"hbaRule"`
+	}
+	if err := c.transport.GET(ctx, "/db-instances/"+instanceID+"/hba-rules/"+ruleID, &out); err != nil {
+		return nil, err
+	}
+	return &out.HBARule, nil
+}
+
+func (c *Client) CreateHBARule(ctx context.Context, instanceID string, req *CreateHBARuleRequest) (*HBARule, error) {
+	var out struct {
+		Header  *ResponseHeader `json:"header"`
+		HBARule HBARule         `json:"hbaRule"`
+	}
+	if err := c.transport.POST(ctx, "/db-instances/"+instanceID+"/hba-rules", req, &out); err != nil {
+		return nil, err
+	}
+	return &out.HBARule, nil
+}
+
+func (c *Client) DeleteHBARule(ctx context.Context, instanceID, ruleID string) (*ResponseHeader, error) {
+	var out ResponseHeader
+	if err := c.transport.DELETE(ctx, "/db-instances/"+instanceID+"/hba-rules/"+ruleID, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) ListMetrics(ctx context.Context, instanceID string) (*MetricsResponse, error) {
+	var out MetricsResponse
+	if err := c.transport.GET(ctx, "/db-instances/"+instanceID+"/metrics", &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) GetMetricStatistics(ctx context.Context, instanceID, metricName string, startTime, endTime string) (*MetricStatisticsResponse, error) {
+	path := fmt.Sprintf("/db-instances/%s/metrics/%s/statistics?startTime=%s&endTime=%s",
+		instanceID, metricName, startTime, endTime)
+	var out MetricStatisticsResponse
+	if err := c.transport.GET(ctx, path, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) ExportBackup(ctx context.Context, backupID string, tenantID string, containerName string) (*JobIDResponse, error) {
+	req := map[string]string{
+		"tenantId":      tenantID,
+		"containerName": containerName,
+	}
+	var out JobIDResponse
+	if err := c.transport.POST(ctx, "/backups/"+backupID+"/export", req, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) RestoreFromBackup(ctx context.Context, backupID string) (*JobIDResponse, error) {
+	var out JobIDResponse
+	if err := c.transport.POST(ctx, "/backups/"+backupID+"/restore", nil, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) ListExtensions(ctx context.Context, instanceGroupID string) (*ExtensionsResponse, error) {
+	var out ExtensionsResponse
+	if err := c.transport.GET(ctx, "/db-instance-groups/"+instanceGroupID+"/extensions", &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) GetExtension(ctx context.Context, instanceGroupID, extensionID string) (*Extension, error) {
+	var out struct {
+		Header    *ResponseHeader `json:"header"`
+		Extension Extension       `json:"extension"`
+	}
+	if err := c.transport.GET(ctx, "/db-instance-groups/"+instanceGroupID+"/extensions/"+extensionID, &out); err != nil {
+		return nil, err
+	}
+	return &out.Extension, nil
+}
+
+func (c *Client) InstallExtension(ctx context.Context, instanceGroupID, extensionID string, req *InstallExtensionRequest) (*JobOutput, error) {
+	var out JobOutput
+	if err := c.transport.POST(ctx, "/db-instance-groups/"+instanceGroupID+"/extensions/"+extensionID+"/install", req, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) UninstallExtension(ctx context.Context, instanceGroupID, extensionID, databaseID string) (*JobOutput, error) {
+	path := fmt.Sprintf("/db-instance-groups/%s/extensions/%s/uninstall?databaseId=%s",
+		instanceGroupID, extensionID, databaseID)
+	var out JobOutput
+	if err := c.transport.POST(ctx, path, nil, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) ResizeStorage(ctx context.Context, instanceID string, newSizeGB int) (*JobOutput, error) {
+	input := &ModifyStorageInfoInput{
+		StorageSize: newSizeGB,
+	}
+	return c.ModifyStorageInfo(ctx, instanceID, input)
+}
+
+func (c *Client) ListEvents(ctx context.Context, params *EventParams) (*EventsResponse, error) {
+	query := url.Values{}
+	if params != nil {
+		if params.InstanceID != "" {
+			query.Set("dbInstanceId", params.InstanceID)
+		}
+		if params.StartTime != "" {
+			query.Set("startTime", params.StartTime)
+		}
+		if params.EndTime != "" {
+			query.Set("endTime", params.EndTime)
+		}
+		if params.EventCode != "" {
+			query.Set("eventCode", params.EventCode)
+		}
+		if params.SourceType != "" {
+			query.Set("sourceType", params.SourceType)
+		}
+		if params.Page > 0 {
+			query.Set("page", fmt.Sprintf("%d", params.Page))
+		}
+		if params.Size > 0 {
+			query.Set("size", fmt.Sprintf("%d", params.Size))
+		}
+	}
+
+	path := "/events"
+	if len(query) > 0 {
+		path += "?" + query.Encode()
+	}
+
+	var out EventsResponse
+	if err := c.transport.GET(ctx, path, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) GetWatchdog(ctx context.Context, instanceID string) (*Watchdog, error) {
+	var out struct {
+		Header   *ResponseHeader `json:"header"`
+		Watchdog Watchdog        `json:"watchdog"`
+	}
+	if err := c.transport.GET(ctx, "/db-instances/"+instanceID+"/watchdog", &out); err != nil {
+		return nil, err
+	}
+	return &out.Watchdog, nil
+}
+
+func (c *Client) CreateWatchdog(ctx context.Context, instanceID string, req *CreateWatchdogRequest) (*JobOutput, error) {
+	var out JobOutput
+	if err := c.transport.POST(ctx, "/db-instances/"+instanceID+"/watchdog", req, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateWatchdog(ctx context.Context, instanceID string, req *CreateWatchdogRequest) (*JobOutput, error) {
+	var out JobOutput
+	if err := c.transport.PUT(ctx, "/db-instances/"+instanceID+"/watchdog", req, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) DeleteWatchdog(ctx context.Context, instanceID string) (*JobOutput, error) {
+	var out JobOutput
+	if err := c.transport.DELETE(ctx, "/db-instances/"+instanceID+"/watchdog", &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) GetNotificationGroupMonitoringItems(ctx context.Context, groupID string) (*MonitoringItemsResponse, error) {
+	var out MonitoringItemsResponse
+	if err := c.transport.GET(ctx, "/notification-groups/"+groupID+"/monitoring-items", &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateNotificationGroupMonitoringItems(ctx context.Context, groupID string, items []MonitoringItem) (*JobOutput, error) {
+	req := map[string]interface{}{
+		"monitoringItems": items,
+	}
+	var out JobOutput
+	if err := c.transport.PUT(ctx, "/notification-groups/"+groupID+"/monitoring-items", req, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil

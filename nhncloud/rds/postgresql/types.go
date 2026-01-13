@@ -599,6 +599,16 @@ type MetricsResponse struct {
 	Metrics []Metric        `json:"metrics"`
 }
 
+type MetricStatistic struct {
+	Timestamp string  `json:"timestamp"`
+	Value     float64 `json:"value"`
+}
+
+type MetricStatisticsResponse struct {
+	Header     *ResponseHeader   `json:"header"`
+	Statistics []MetricStatistic `json:"statistics"`
+}
+
 type Event struct {
 	EventID      string    `json:"eventId"`
 	EventCode    string    `json:"eventCode"`
@@ -614,6 +624,29 @@ type Event struct {
 type EventsResponse struct {
 	Header *ResponseHeader `json:"header"`
 	Events []Event         `json:"events"`
+}
+
+type EventParams struct {
+	InstanceID string
+	StartTime  string
+	EndTime    string
+	EventCode  string
+	SourceType string
+	Page       int
+	Size       int
+}
+
+type MonitoringItem struct {
+	MonitoringItemID   string `json:"monitoringItemId"`
+	MonitoringItemName string `json:"monitoringItemName"`
+	Description        string `json:"description"`
+	Threshold          int    `json:"threshold"`
+	IsEnabled          bool   `json:"isEnabled"`
+}
+
+type MonitoringItemsResponse struct {
+	Header          *ResponseHeader  `json:"header"`
+	MonitoringItems []MonitoringItem `json:"monitoringItems"`
 }
 
 // Job Response
@@ -683,6 +716,42 @@ type LogFile struct {
 type LogFilesResponse struct {
 	Header   *ResponseHeader `json:"header"`
 	LogFiles []LogFile       `json:"logFiles"`
+}
+
+type CreateInstanceGroupRequest struct {
+	DBInstanceGroupName string `json:"dbInstanceGroupName"`
+	ReplicationType     string `json:"replicationType,omitempty"`
+}
+
+type UpdateInstanceGroupRequest struct {
+	DBInstanceGroupName string `json:"dbInstanceGroupName"`
+}
+
+type LogFileParams struct {
+	InstanceID string
+	Page       int
+	Size       int
+}
+
+type Schema struct {
+	SchemaName string   `json:"schemaName"`
+	Owner      string   `json:"owner"`
+	Tables     []string `json:"tables,omitempty"`
+	Size       int64    `json:"size"`
+}
+
+type DatabaseSchemaResponse struct {
+	Header  *ResponseHeader `json:"header"`
+	Schemas []Schema        `json:"schemas"`
+}
+
+type Permission struct {
+	DatabaseName string   `json:"databaseName"`
+	Privileges   []string `json:"privileges"`
+}
+
+type GrantPermissionsRequest struct {
+	Permissions []Permission `json:"permissions"`
 }
 
 type ListInstancesOutput = DBInstancesResponse
