@@ -10,16 +10,6 @@ linters:
     - staticcheck
     - unused
     - govet
-  settings:
-    errcheck:
-      exclude-functions:
-        - io.Closer.Close
-        - (*net/http.Response).Body.Close
-        - (io.ReadCloser).Close
-        - os.Setenv
-        - os.Unsetenv
-        - (*encoding/json.Encoder).Encode
-        - (*encoding/json.Decoder).Decode
   exclusions:
     rules:
       - path: _test\.go$
@@ -28,7 +18,9 @@ linters:
       - text: "Error return value of .*(Close|close).*is not checked"
         linters:
           - errcheck
-
-formatters:
-  enable:
-    - gofmt
+      - text: "Error return value of `os\\.(Setenv|Unsetenv)`"
+        linters:
+          - errcheck
+      - text: "Error return value of `\\(\\*encoding/json"
+        linters:
+          - errcheck
