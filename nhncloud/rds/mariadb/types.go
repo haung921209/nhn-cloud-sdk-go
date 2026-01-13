@@ -90,6 +90,15 @@ type BackupConfig struct {
 	BackupSchedules []BackupSchedule `json:"backupSchedules"`
 }
 
+// RestartInstanceRequest represents a request to restart a database instance
+type RestartInstanceRequest struct {
+	// UseOnlineFailover enables restart using failover (HA instances only)
+	// When true, minimizes downtime by failing over to standby before restart
+	UseOnlineFailover bool `json:"useOnlineFailover,omitempty"`
+	// ExecuteBackup triggers a backup before restart
+	ExecuteBackup bool `json:"executeBackup,omitempty"`
+}
+
 // CreateDatabaseInstanceRequest represents MariaDB instance creation request
 type CreateDatabaseInstanceRequest struct {
 	DBInstanceName          string `json:"dbInstanceName"`
@@ -144,15 +153,6 @@ type ModifyStorageInfoRequest struct {
 // ModifyDeletionProtectionRequest for PUT /v3.0/db-instances/{dbInstanceId}/deletion-protection
 type ModifyDeletionProtectionRequest struct {
 	UseDeletionProtection bool `json:"useDeletionProtection"`
-}
-
-// RestartInstanceRequest represents a request to restart a database instance
-type RestartInstanceRequest struct {
-	// UseOnlineFailover enables restart using failover (HA instances only)
-	// When true, minimizes downtime by failing over to standby before restart
-	UseOnlineFailover bool `json:"useOnlineFailover,omitempty"`
-	// ExecuteBackup triggers a backup before restart
-	ExecuteBackup bool `json:"executeBackup,omitempty"`
 }
 
 // Parameter Groups

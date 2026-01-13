@@ -96,8 +96,7 @@ func (c *Client) StopInstance(ctx context.Context, instanceID string) (*JobOutpu
 	return &out, nil
 }
 
-func (c *Client) RestartInstance(ctx context.Context, instanceID string, useOnlineFailover bool) (*JobOutput, error) {
-	req := map[string]interface{}{"useOnlineFailover": useOnlineFailover}
+func (c *Client) RestartInstance(ctx context.Context, instanceID string, req *RestartInstanceRequest) (*JobOutput, error) {
 	var out JobOutput
 	if err := c.transport.POST(ctx, "/db-instances/"+instanceID+"/restart", req, &out); err != nil {
 		return nil, err
