@@ -62,7 +62,7 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body interf
 	}
 
 	fullURL := c.getBaseURL() + c.buildPath(path)
-	if query != nil && len(query) > 0 {
+	if len(query) > 0 {
 		fullURL += "?" + query.Encode()
 	}
 

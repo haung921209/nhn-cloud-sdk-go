@@ -148,10 +148,7 @@ func IsRetryable(err error) bool {
 		return true
 	}
 	var timeoutErr *TimeoutError
-	if errors.As(err, &timeoutErr) {
-		return true
-	}
-	return false
+	return errors.As(err, &timeoutErr)
 }
 
 // IsValidation returns true if the error indicates a validation failure.

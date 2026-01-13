@@ -1,12 +1,15 @@
 package object
+
 import (
 	"io"
 )
+
 // Storage Classes
 const (
 	StorageClassStandard = "Standard"
 	StorageClassEconomy  = "Economy"
 )
+
 // ==================== Account Types ====================
 // AccountInfo represents storage account information
 type AccountInfo struct {
@@ -14,6 +17,7 @@ type AccountInfo struct {
 	ObjectCount    int64
 	BytesUsed      int64
 }
+
 // ==================== Container Types ====================
 // Container represents a storage container
 type Container struct {
@@ -22,6 +26,7 @@ type Container struct {
 	Bytes        int64  `json:"bytes"`
 	LastModified string `json:"last_modified,omitempty"`
 }
+
 // ListContainersInput contains parameters for listing containers
 type ListContainersInput struct {
 	Format string // json or xml
@@ -29,10 +34,12 @@ type ListContainersInput struct {
 	Limit  int    // max results
 	Prefix string // filter by prefix
 }
+
 // ListContainersOutput contains the list of containers
 type ListContainersOutput struct {
 	Containers []Container
 }
+
 // ContainerInfo represents detailed container information
 type ContainerInfo struct {
 	Name                 string
@@ -59,6 +66,7 @@ type ContainerInfo struct {
 	AllowKeywordPolicy   string
 	CustomMetadata       map[string]string
 }
+
 // CreateContainerInput contains parameters for creating a container
 type CreateContainerInput struct {
 	Name             string
@@ -68,6 +76,7 @@ type CreateContainerInput struct {
 	WriteACL         string
 	Metadata         map[string]string
 }
+
 // UpdateContainerInput contains parameters for updating container settings
 type UpdateContainerInput struct {
 	Name                 string
@@ -91,16 +100,18 @@ type UpdateContainerInput struct {
 	AllowKeywordPolicy   string // upload whitelist keywords
 	Metadata             map[string]string
 }
+
 // ==================== Object Types ====================
 // Object represents an object in a container
 type Object struct {
-	Name         string    `json:"name"`
-	Hash         string    `json:"hash"`
-	Bytes        int64     `json:"bytes"`
-	ContentType  string    `json:"content_type"`
+	Name         string `json:"name"`
+	Hash         string `json:"hash"`
+	Bytes        int64  `json:"bytes"`
+	ContentType  string `json:"content_type"`
 	LastModified string `json:"last_modified"`
-	Subdir       string    `json:"subdir,omitempty"` // for delimiter queries
+	Subdir       string `json:"subdir,omitempty"` // for delimiter queries
 }
+
 // ListObjectsInput contains parameters for listing objects
 type ListObjectsInput struct {
 	Prefix    string
@@ -109,10 +120,12 @@ type ListObjectsInput struct {
 	Limit     int
 	Format    string // json or xml
 }
+
 // ListObjectsOutput contains the list of objects
 type ListObjectsOutput struct {
 	Objects []Object
 }
+
 // ObjectInfo represents detailed object information from HEAD request
 type ObjectInfo struct {
 	ContentType       string
@@ -127,6 +140,7 @@ type ObjectInfo struct {
 	ManifestETag      string // SLO manifest ETag
 	CustomMetadata    map[string]string
 }
+
 // PutObjectInput contains parameters for uploading an object
 type PutObjectInput struct {
 	Container   string
@@ -137,11 +151,13 @@ type PutObjectInput struct {
 	DeleteAfter *int64 // TTL in seconds
 	Metadata    map[string]string
 }
+
 // PutObjectOutput contains the result of object upload
 type PutObjectOutput struct {
 	ETag         string
 	LastModified string
 }
+
 // GetObjectOutput contains the result of object download
 type GetObjectOutput struct {
 	Body          io.ReadCloser
@@ -151,6 +167,7 @@ type GetObjectOutput struct {
 	LastModified  string
 	Metadata      map[string]string
 }
+
 // CopyObjectInput contains parameters for copying an object
 type CopyObjectInput struct {
 	SourceContainer       string
@@ -158,6 +175,7 @@ type CopyObjectInput struct {
 	DestinationContainer  string
 	DestinationObjectName string
 }
+
 // UpdateObjectMetadataInput contains parameters for updating object metadata
 type UpdateObjectMetadataInput struct {
 	Container       string
@@ -167,6 +185,7 @@ type UpdateObjectMetadataInput struct {
 	WormRetainUntil *int64 // Lock expiry (can only extend)
 	Metadata        map[string]string
 }
+
 // ==================== Multipart Upload Types ====================
 // UploadSegmentInput contains parameters for uploading a segment
 type UploadSegmentInput struct {
@@ -176,6 +195,7 @@ type UploadSegmentInput struct {
 	Body         io.Reader
 	ContentType  string
 }
+
 // CreateDLOManifestInput contains parameters for creating a DLO manifest
 type CreateDLOManifestInput struct {
 	Container        string
@@ -184,12 +204,14 @@ type CreateDLOManifestInput struct {
 	SegmentPrefix    string // segments path prefix
 	ContentType      string
 }
+
 // SLOSegment represents a segment in an SLO manifest
 type SLOSegment struct {
 	Path      string `json:"path"`       // {container}/{object}
 	ETag      string `json:"etag"`       // segment ETag
 	SizeBytes int64  `json:"size_bytes"` // segment size
 }
+
 // CreateSLOManifestInput contains parameters for creating an SLO manifest
 type CreateSLOManifestInput struct {
 	Container   string
@@ -197,10 +219,12 @@ type CreateSLOManifestInput struct {
 	Segments    []SLOSegment
 	ContentType string
 }
+
 // GetSLOManifestOutput contains the segments of an SLO
 type GetSLOManifestOutput struct {
 	Segments []SLOSegment
 }
+
 // ==================== Legacy Types (for backward compatibility) ====================
 // ObjectMetadata for backward compatibility
 type ObjectMetadata struct {
@@ -209,6 +233,7 @@ type ObjectMetadata struct {
 	ContentEncoding    string
 	Metadata           map[string]string
 }
+
 // ContainerMetadata for backward compatibility
 type ContainerMetadata struct {
 	ReadACL          string

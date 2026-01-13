@@ -36,7 +36,8 @@ func (c *Config) httpClient() *http.Client {
 	return http.DefaultClient
 }
 
-func (c *Config) userAgent() string {
+// UserAgentString returns the user agent string for HTTP requests.
+func (c *Config) UserAgentString() string {
 	if c.UserAgent != "" {
 		return c.UserAgent
 	}

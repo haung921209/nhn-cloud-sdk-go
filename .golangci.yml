@@ -1,0 +1,34 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - staticcheck
+    - unused
+    - govet
+  settings:
+    errcheck:
+      exclude-functions:
+        - io.Closer.Close
+        - (*net/http.Response).Body.Close
+        - (io.ReadCloser).Close
+        - os.Setenv
+        - os.Unsetenv
+        - (*encoding/json.Encoder).Encode
+        - (*encoding/json.Decoder).Decode
+  exclusions:
+    rules:
+      - path: _test\.go$
+        linters:
+          - errcheck
+      - text: "Error return value of .*(Close|close).*is not checked"
+        linters:
+          - errcheck
+
+formatters:
+  enable:
+    - gofmt
