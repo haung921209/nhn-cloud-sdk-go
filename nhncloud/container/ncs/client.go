@@ -154,3 +154,131 @@ func (c *Client) DeleteService(ctx context.Context, serviceID string) error {
 	}
 	return nil
 }
+
+func (c *Client) GetWorkloadLogs(ctx context.Context, workloadID string, tailLines int, sinceSeconds int) (*GetWorkloadLogsOutput, error) {
+	path := fmt.Sprintf("/workloads/%s/logs?tailLines=%d", workloadID, tailLines)
+	if sinceSeconds > 0 {
+		path += fmt.Sprintf("&sinceSeconds=%d", sinceSeconds)
+	}
+	var out GetWorkloadLogsOutput
+	if err := c.httpClient.GET(ctx, path, &out); err != nil {
+		return nil, fmt.Errorf("get workload logs %s: %w", workloadID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) ConfigureHealthCheck(ctx context.Context, workloadID string, config *HealthCheckConfig) error {
+	if err := c.httpClient.PUT(ctx, "/workloads/"+workloadID+"/health-checks", config, nil); err != nil {
+		return fmt.Errorf("configure health check %s: %w", workloadID, err)
+	}
+	return nil
+}
+
+func (c *Client) GetHealthCheckStatus(ctx context.Context, workloadID string) (*GetHealthCheckStatusOutput, error) {
+	var out GetHealthCheckStatusOutput
+	if err := c.httpClient.GET(ctx, "/workloads/"+workloadID+"/health-checks", &out); err != nil {
+		return nil, fmt.Errorf("get health check status %s: %w", workloadID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateResourceLimits(ctx context.Context, workloadID string, input *UpdateResourceLimitsInput) error {
+	if err := c.httpClient.PUT(ctx, "/workloads/"+workloadID+"/resources", input, nil); err != nil {
+		return fmt.Errorf("update resource limits %s: %w", workloadID, err)
+	}
+	return nil
+}
+
+func (c *Client) GetWorkloadEvents(ctx context.Context, workloadID string) (*GetWorkloadEventsOutput, error) {
+	var out GetWorkloadEventsOutput
+	if err := c.httpClient.GET(ctx, "/workloads/"+workloadID+"/events", &out); err != nil {
+		return nil, fmt.Errorf("get workload events %s: %w", workloadID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) ListVolumes(ctx context.Context) (*ListVolumesOutput, error) {
+	var out ListVolumesOutput
+	if err := c.httpClient.GET(ctx, "/volumes", &out); err != nil {
+		return nil, fmt.Errorf("list volumes: %w", err)
+	}
+	return &out, nil
+}
+
+func (c *Client) AttachVolume(ctx context.Context, workloadID string, input *VolumeAttachInput) (*AttachVolumeOutput, error) {
+	var out AttachVolumeOutput
+	if err := c.httpClient.POST(ctx, "/workloads/"+workloadID+"/volumes", input, &out); err != nil {
+		return nil, fmt.Errorf("attach volume to workload %s: %w", workloadID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) ExecWorkloadContainer(ctx context.Context, workloadID string, input *ExecInput) (*ExecOutput, error) {
+	var out ExecOutput
+	if err := c.httpClient.POST(ctx, "/workloads/"+workloadID+"/exec", input, &out); err != nil {
+		return nil, fmt.Errorf("exec in workload container %s: %w", workloadID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) GetContainerStatus(ctx context.Context, workloadID string) (*GetContainerStatusOutput, error) {
+	var out GetContainerStatusOutput
+	if err := c.httpClient.GET(ctx, "/workloads/"+workloadID+"/containers/status", &out); err != nil {
+		return nil, fmt.Errorf("get container status %s: %w", workloadID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) ConfigureAutoScaling(ctx context.Context, workloadID string, input *ConfigureAutoScalingInput) error {
+	if err := c.httpClient.PUT(ctx, "/workloads/"+workloadID+"/autoscaling", input, nil); err != nil {
+		return fmt.Errorf("configure autoscaling %s: %w", workloadID, err)
+	}
+	return nil
+}
+
+func (c *Client) GetAutoScalingStatus(ctx context.Context, workloadID string) (*GetAutoScalingStatusOutput, error) {
+	var out GetAutoScalingStatusOutput
+	if err := c.httpClient.GET(ctx, "/workloads/"+workloadID+"/autoscaling", &out); err != nil {
+		return nil, fmt.Errorf("get autoscaling status %s: %w", workloadID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) ListNetworkPolicies(ctx context.Context) (*ListNetworkPoliciesOutput, error) {
+	var out ListNetworkPoliciesOutput
+	if err := c.httpClient.GET(ctx, "/network-policies", &out); err != nil {
+		return nil, fmt.Errorf("list network policies: %w", err)
+	}
+	return &out, nil
+}
+
+func (c *Client) GetNetworkPolicy(ctx context.Context, policyID string) (*GetNetworkPolicyOutput, error) {
+	var out GetNetworkPolicyOutput
+	if err := c.httpClient.GET(ctx, "/network-policies/"+policyID, &out); err != nil {
+		return nil, fmt.Errorf("get network policy %s: %w", policyID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) CreateNetworkPolicy(ctx context.Context, input *CreateNetworkPolicyInput) (*GetNetworkPolicyOutput, error) {
+	var out GetNetworkPolicyOutput
+	if err := c.httpClient.POST(ctx, "/network-policies", input, &out); err != nil {
+		return nil, fmt.Errorf("create network policy: %w", err)
+	}
+	return &out, nil
+}
+
+func (c *Client) UpdateNetworkPolicy(ctx context.Context, policyID string, input *UpdateNetworkPolicyInput) (*GetNetworkPolicyOutput, error) {
+	var out GetNetworkPolicyOutput
+	if err := c.httpClient.PUT(ctx, "/network-policies/"+policyID, input, &out); err != nil {
+		return nil, fmt.Errorf("update network policy %s: %w", policyID, err)
+	}
+	return &out, nil
+}
+
+func (c *Client) DeleteNetworkPolicy(ctx context.Context, policyID string) error {
+	if err := c.httpClient.DELETE(ctx, "/network-policies/"+policyID, nil); err != nil {
+		return fmt.Errorf("delete network policy %s: %w", policyID, err)
+	}
+	return nil
+}
