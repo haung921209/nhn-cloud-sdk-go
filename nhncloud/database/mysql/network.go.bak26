@@ -201,6 +201,11 @@ func (c *Client) ModifyDeletionProtection(ctx context.Context, instanceID string
 }
 // BackupInfo API methods - Get and Modify backup configuration
 
+// BackupSchedule represents a backup schedule window
+type BackupSchedule struct {
+	BackupWndBgnTime  string `json:"backupWndBgnTime"`  // HH:MM:SS format
+	BackupWndDuration string `json:"backupWndDuration"` // HALF_AN_HOUR, ONE_HOUR, etc
+}
 
 // BackupInfo represents backup configuration
 type BackupInfo struct {

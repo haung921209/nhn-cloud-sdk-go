@@ -209,7 +209,7 @@ type BackupInfo struct {
 	BackupRetryCount  int              `json:"backupRetryCount"`  // Retry attempts
 	ReplicationRegion *string          `json:"replicationRegion"` // For backup replication
 	UseBackupLock     bool             `json:"useBackupLock"`     // Use LOCK INSTANCE FOR BACKUP
-	BackupSchedules   []BackupSchedule `json:"backupSchedules"`   // Backup windows
+	DatabaseInstanceBackupSchedules   []DatabaseInstanceBackupSchedule `json:"backupSchedules"`   // Backup windows
 }
 
 // GetBackupInfoResponse is the response for GetBackupInfo
@@ -250,7 +250,7 @@ func (c *Client) GetBackupInfo(ctx context.Context, instanceID string) (*GetBack
 type ModifyBackupInfoRequest struct {
 	BackupPeriod    int              `json:"backupPeriod"`              // Days to retain (0-730)
 	UseBackupLock   *bool            `json:"useBackupLock,omitempty"`   // Use LOCK INSTANCE FOR BACKUP
-	BackupSchedules []BackupSchedule `json:"backupSchedules,omitempty"` // Backup windows
+	DatabaseInstanceBackupSchedules []DatabaseInstanceBackupSchedule `json:"backupSchedules,omitempty"` // Backup windows
 }
 
 // ModifyBackupInfoResponse is the response for ModifyBackupInfo

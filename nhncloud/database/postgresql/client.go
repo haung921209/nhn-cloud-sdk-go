@@ -3,9 +3,9 @@
 // Official API Documentation:
 // https://docs.nhncloud.com/ko/Database/RDS%20for%20PostgreSQL/ko/api-guide-v1.0/
 //
-// Key Differences from PostgreSQL/MariaDB:
+// Key Differences from MySQL/MariaDB:
 //   - API Version: v1.0 (not v3.0)
-//   - Authentication: Bearer Token (not OAuth2 headers)
+//   - Authentication: Bearer Token (automatically issued via OAuth2)
 //   - Database Management: /databases (not /db-schemas)
 //   - PostgreSQL-specific: Extensions, HBA Rules
 //   - Port: 5432 (not 3306)
@@ -14,9 +14,10 @@
 // Example:
 //
 //	cfg := postgresql.Config{
-//	    Region: "kr1",
-//	    AppKey: "your-app-key",
-//	    Token:  "your-bearer-token", // Obtained via OAuth2
+//	    Region:    "kr1",
+//	    AppKey:    "your-app-key",
+//	    AccessKey: "your-access-key-id",
+//	    SecretKey: "your-secret-access-key",
 //	}
 //
 //	client, err := postgresql.NewClient(cfg)
@@ -24,6 +25,7 @@
 //	    log.Fatal(err)
 //	}
 //
+//	// Bearer token is automatically issued and cached
 //	instances, err := client.ListInstances(context.Background())
 //	if err != nil {
 //	    log.Fatal(err)
@@ -48,15 +50,16 @@ type Client struct {
 
 // Config holds PostgreSQL client configuration
 type Config struct {
-	Region string
-	AppKey string
-	Token  string // Bearer token (obtained via OAuth2 token exchange)
+	Region    string
+	AppKey    string
+	AccessKey string // User Access Key ID
+	SecretKey string // Secret Access Key
 }
 
 // NewClient creates a new PostgreSQL client.
 //
-// Note: PostgreSQL v1.0 uses Bearer Token authentication, different from
-// PostgreSQL/MariaDB v3.0 which uses OAuth2 headers.
+// Bearer token is automatically issued using Access Key ID and Secret Access Key,
+// and cached locally at ~/.nhncloud/postgresql_token_cache.json
 func NewClient(cfg Config) (*Client, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
@@ -65,8 +68,8 @@ func NewClient(cfg Config) (*Client, error) {
 	// PostgreSQL uses different base URL: rds-postgres (not rds-postgresql)
 	baseURL := fmt.Sprintf("%s-rds-postgres.api.nhncloudservice.com", cfg.Region)
 
-	// PostgreSQL uses Bearer token authentication
-	authenticator := auth.NewBearerAuth(cfg.AppKey, cfg.Token)
+	// Use auto-refresh authenticator - token is issued automatically
+	authenticator := auth.NewBearerAuthWithAutoRefresh(cfg.AppKey, cfg.AccessKey, cfg.SecretKey)
 
 	coreClient := core.NewClient(baseURL, authenticator, nil)
 
@@ -83,8 +86,11 @@ func (c *Config) Validate() error {
 	if c.AppKey == "" {
 		return &core.ValidationError{Field: "AppKey", Message: "app key is required"}
 	}
-	if c.Token == "" {
-		return &core.ValidationError{Field: "Token", Message: "bearer token is required"}
+	if c.AccessKey == "" {
+		return &core.ValidationError{Field: "AccessKey", Message: "access key ID is required"}
+	}
+	if c.SecretKey == "" {
+		return &core.ValidationError{Field: "SecretKey", Message: "secret access key is required"}
 	}
 	return nil
 }

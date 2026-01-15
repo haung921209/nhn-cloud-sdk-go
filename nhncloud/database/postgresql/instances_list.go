@@ -17,9 +17,9 @@ type ListInstancesResponse struct {
 // ListInstances retrieves a list of PostgreSQL instances.
 //
 // API Reference:
-// https://docs.nhncloud.com/ko/Database/RDS%20for%20PostgreSQL/ko/api-guide-v3.0/#db_1
+// https://docs.nhncloud.com/ko/Database/RDS%20for%20PostgreSQL/ko/api-guide-v1.0/#_1
 func (c *Client) ListInstances(ctx context.Context) (*ListInstancesResponse, error) {
-	path := "/v3.0/db-instances"
+	path := "/v1.0/db-instances"
 	req, err := http.NewRequestWithContext(ctx, "GET", path, nil)
 	if err != nil {
 		return nil, err
@@ -47,13 +47,13 @@ type GetInstanceResponse struct {
 // GetInstance retrieves details of a specific PostgreSQL instance.
 //
 // API Reference:
-// https://docs.nhncloud.com/ko/Database/RDS%20for%20PostgreSQL/ko/api-guide-v3.0/#db_2
+// https://docs.nhncloud.com/ko/Database/RDS%20for%20PostgreSQL/ko/api-guide-v1.0/#_2
 func (c *Client) GetInstance(ctx context.Context, instanceID string) (*GetInstanceResponse, error) {
 	if instanceID == "" {
 		return nil, &core.ValidationError{Field: "instanceID", Message: "instance ID is required"}
 	}
 
-	path := fmt.Sprintf("/v3.0/db-instances/%s", instanceID)
+	path := fmt.Sprintf("/v1.0/db-instances/%s", instanceID)
 	req, err := http.NewRequestWithContext(ctx, "GET", path, nil)
 	if err != nil {
 		return nil, err
