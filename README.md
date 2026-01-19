@@ -28,7 +28,26 @@ go get github.com/haung921209/nhn-cloud-sdk-go
 
 ## Configuration
 
-For detailed authentication setup (Env Vars, Config File, SSL), see [Configuration Guide](docs/CONFIGURATION.md).
+The SDK unifies authentication for all services.
+
+### 1. Environment Variables
+Set these to avoid checking credentials into code:
+- `NHN_CLOUD_REGION` (e.g. `kr1`)
+- `NHN_CLOUD_APPKEY`
+- `NHN_CLOUD_TENANT_ID`
+- `NHN_CLOUD_USERNAME` / `NHN_CLOUD_PASSWORD`
+
+### 2. TLS/SSL Setup (RDS)
+To securely connect to RDS MySQL/MariaDB/Postgres, you must register the Root CA.
+
+```go
+// Download: https://static.toastoven.net/toastcloud/sdk_download/rds/ca-certificate.crt
+rootCertPool := x509.NewCertPool()
+pem, _ := os.ReadFile("ca-certificate.crt")
+rootCertPool.AppendCertsFromPEM(pem)
+// Use this config in your driver
+mysql.RegisterTLSConfig("custom", &tls.Config{RootCAs: rootCertPool})
+```
 
 ## Basic Usage
 

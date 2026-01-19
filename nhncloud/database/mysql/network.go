@@ -199,8 +199,8 @@ func (c *Client) ModifyDeletionProtection(ctx context.Context, instanceID string
 
 	return &result, nil
 }
-// BackupInfo API methods - Get and Modify backup configuration
 
+// BackupInfo API methods - Get and Modify backup configuration
 
 // BackupInfo represents backup configuration
 type BackupInfo struct {

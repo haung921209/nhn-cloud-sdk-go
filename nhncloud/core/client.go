@@ -61,7 +61,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 	// Set full URL
 	req.URL.Scheme = "https"
 	req.URL.Host = c.baseURL
-	
+
 	// Add authentication
 	if c.auth != nil {
 		if err := c.auth.Authenticate(req); err != nil {
