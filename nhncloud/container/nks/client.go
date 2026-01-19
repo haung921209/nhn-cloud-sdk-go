@@ -205,3 +205,15 @@ func (c *Client) ListClusterTemplates(ctx context.Context) (*ListClusterTemplate
 	}
 	return &out, nil
 }
+
+func (c *Client) GetSupportedVersions(ctx context.Context) (*GetSupportedVersionsOutput, error) {
+	if err := c.ensureClient(ctx); err != nil {
+		return nil, err
+	}
+
+	var out GetSupportedVersionsOutput
+	if err := c.httpClient.GET(ctx, "/supports", &out); err != nil {
+		return nil, fmt.Errorf("get supported versions: %w", err)
+	}
+	return &out, nil
+}

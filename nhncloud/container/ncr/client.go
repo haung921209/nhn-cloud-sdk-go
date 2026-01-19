@@ -7,7 +7,6 @@ import (
 
 	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/credentials"
 	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/internal/client"
-	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/internal/endpoint"
 )
 
 type Client struct {
@@ -39,7 +38,7 @@ func NewClient(region, appKey string, creds credentials.Credentials, hc *http.Cl
 }
 
 func (c *Client) initHTTPClient() {
-	baseURL := endpoint.ResolveWithAppKey(endpoint.ServiceNCR, c.region, c.appKey)
+	baseURL := fmt.Sprintf("https://%s-ncr.api.nhncloudservice.com/ncr/v2.0/appkeys/%s", c.region, c.appKey)
 	opts := []client.ClientOption{
 		client.WithDebug(c.debug),
 	}

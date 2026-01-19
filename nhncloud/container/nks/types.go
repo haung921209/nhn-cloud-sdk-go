@@ -33,17 +33,17 @@ type GetClusterOutput struct {
 }
 
 type CreateClusterInput struct {
-	Name              string            `json:"name"`
-	ClusterTemplateID string            `json:"cluster_template_id,omitempty"`
-	K8sVersion        string            `json:"coe_version,omitempty"`
-	MasterCount       int               `json:"master_count,omitempty"`
-	NodeCount         int               `json:"node_count,omitempty"`
-	MasterFlavorID    string            `json:"master_flavor_id,omitempty"`
-	FlavorID          string            `json:"flavor_id,omitempty"`
-	KeyPair           string            `json:"keypair,omitempty"`
-	NetworkID         string            `json:"fixed_network,omitempty"`
-	SubnetID          string            `json:"fixed_subnet,omitempty"`
-	Labels            map[string]string `json:"labels,omitempty"`
+	Name              string `json:"name"`
+	ClusterTemplateID string `json:"cluster_template_id,omitempty"`
+	// K8sVersion        string            `json:"coe_version,omitempty"` // Read-only field
+	MasterCount    int               `json:"master_count,omitempty"`
+	NodeCount      int               `json:"node_count,omitempty"`
+	MasterFlavorID string            `json:"master_flavor_id,omitempty"`
+	FlavorID       string            `json:"flavor_id,omitempty"`
+	KeyPair        string            `json:"keypair,omitempty"`
+	NetworkID      string            `json:"fixed_network,omitempty"`
+	SubnetID       string            `json:"fixed_subnet,omitempty"`
+	Labels         map[string]string `json:"labels,omitempty"`
 }
 
 type CreateClusterOutput struct {
@@ -124,4 +124,8 @@ type ListClusterTemplatesOutput struct {
 
 type GetKubeconfigOutput struct {
 	Kubeconfig string
+}
+
+type GetSupportedVersionsOutput struct {
+	SupportedK8s map[string]bool `json:"supported_k8s"`
 }

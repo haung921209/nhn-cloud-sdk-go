@@ -54,8 +54,10 @@ func (c *Client) ensureClient(ctx context.Context) error {
 	}
 
 	baseURL, err := c.tokenProvider.GetServiceEndpoint("object-store", c.region)
-	if err != nil {
-		return fmt.Errorf("resolve endpoint: %w", err)
+	if err != nil || baseURL == "" {
+		// Fallback to documented public endpoint pattern
+		tenantID := c.credentials.GetTenantID()
+		baseURL = fmt.Sprintf("https://%s-api-object-storage.nhncloudservice.com/v1/AUTH_%s", c.region, tenantID)
 	}
 
 	c.baseURL = baseURL
@@ -80,12 +82,38 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body io.Rea
 		req.Header.Set(k, v)
 	}
 
+	// Debug logging
+	if c.debug {
+		fmt.Printf("--- api request ---\n")
+		fmt.Printf("%s %s\n", req.Method, req.URL.String())
+		for k, v := range req.Header {
+			fmt.Printf("%s: %s\n", k, strings.Join(v, ","))
+		}
+		fmt.Printf("-------------------\n")
+	}
+
 	httpClient := c.httpClient
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 
-	return httpClient.Do(req)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.debug {
+		fmt.Printf("--- api response ---\n")
+		fmt.Printf("Status: %s\n", resp.Status)
+		for k, v := range resp.Header {
+			fmt.Printf("%s: %s\n", k, strings.Join(v, ","))
+		}
+		// Note: Body reading would consume it, so we don't dump body here unless we buffer it.
+		// For now header/status is enough to debug 403.
+		fmt.Printf("--------------------\n")
+	}
+
+	return resp, nil
 }
 
 func (c *Client) GetAccountInfo(ctx context.Context) (*AccountInfo, error) {

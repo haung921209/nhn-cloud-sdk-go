@@ -135,7 +135,7 @@ func (c *Client) CreateInstance(ctx context.Context, req *CreateInstanceRequest)
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", "/v3.0/db-instances", bytes.NewReader(body))
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", "/v1.0/db-instances", bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +188,7 @@ func (c *Client) ModifyInstance(ctx context.Context, instanceID string, req *Mod
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	path := fmt.Sprintf("/v3.0/db-instances/%s", instanceID)
+	path := fmt.Sprintf("/v1.0/db-instances/%s", instanceID)
 	httpReq, err := http.NewRequestWithContext(ctx, "PUT", path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
@@ -222,7 +222,7 @@ func (c *Client) DeleteInstance(ctx context.Context, instanceID string) (*Delete
 		return nil, &core.ValidationError{Field: "instanceID", Message: "instance ID is required"}
 	}
 
-	path := fmt.Sprintf("/v3.0/db-instances/%s", instanceID)
+	path := fmt.Sprintf("/v1.0/db-instances/%s", instanceID)
 	req, err := http.NewRequestWithContext(ctx, "DELETE", path, nil)
 	if err != nil {
 		return nil, err

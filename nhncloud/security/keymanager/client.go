@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strings"
 	"time"
 )
 
@@ -23,7 +22,7 @@ type Client struct {
 }
 
 func NewClient(region, appKey, userAccessKeyID, secretAccessKey string, debug bool) *Client {
-	baseURL := fmt.Sprintf("https://%s-api-keymanager.nhncloudservice.com", strings.ToLower(region))
+	baseURL := "https://api-keymanager.nhncloudservice.com"
 	return &Client{
 		baseURL:         baseURL,
 		appKey:          appKey,

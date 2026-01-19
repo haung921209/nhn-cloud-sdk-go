@@ -7,13 +7,13 @@ type ResponseHeader struct {
 }
 
 type Registry struct {
-	ID        string `json:"id"`
+	ID        int64  `json:"project_id"`
 	Name      string `json:"name"`
 	URI       string `json:"uri"`
 	IsPublic  bool   `json:"isPublic"`
 	Status    string `json:"status"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	CreatedAt string `json:"creation_time"`
+	UpdatedAt string `json:"update_time"`
 }
 
 type ListRegistriesOutput struct {
@@ -27,7 +27,7 @@ type GetRegistryOutput struct {
 }
 
 type CreateRegistryInput struct {
-	Name        string `json:"registryName"`
+	Name        string `json:"project_name"`
 	Description string `json:"description,omitempty"`
 	IsPublic    bool   `json:"isPublic,omitempty"`
 }
