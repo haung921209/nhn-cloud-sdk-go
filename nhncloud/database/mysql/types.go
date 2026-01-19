@@ -77,6 +77,8 @@ type DatabaseInstanceNetwork struct {
 	UsePublicAccess  bool   `json:"usePublicAccess"`
 	DomainName       string `json:"domainName,omitempty"`
 	IPAddress        string `json:"ipAddress,omitempty"`
+	FloatingIP       string `json:"floatingIp,omitempty"`
+	PublicIP         string `json:"publicIp,omitempty"`
 }
 
 // DatabaseInstanceStorage represents storage configuration

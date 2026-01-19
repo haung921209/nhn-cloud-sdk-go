@@ -34,7 +34,7 @@ type NetworkEndPoint struct {
 // GetNetworkInfoResponse is the response for GetNetworkInfo
 type GetNetworkInfoResponse struct {
 	PostgreSQLResponse
-	NetworkInfo NetworkInfo `json:"networkInfo"`
+	NetworkInfo
 }
 
 // GetNetworkInfo retrieves network information for an instance.
@@ -46,7 +46,7 @@ func (c *Client) GetNetworkInfo(ctx context.Context, instanceID string) (*GetNet
 		return nil, &core.ValidationError{Field: "instanceID", Message: "instance ID is required"}
 	}
 
-	path := fmt.Sprintf("/v3.0/db-instances/%s/network-info", instanceID)
+	path := fmt.Sprintf("/v1.0/db-instances/%s/network-info", instanceID)
 	req, err := http.NewRequestWithContext(ctx, "GET", path, nil)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (c *Client) ModifyNetworkInfo(ctx context.Context, instanceID string, req *
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	path := fmt.Sprintf("/v3.0/db-instances/%s/network-info", instanceID)
+	path := fmt.Sprintf("/v1.0/db-instances/%s/network-info", instanceID)
 	httpReq, err := http.NewRequestWithContext(ctx, "PUT", path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
@@ -102,6 +102,46 @@ func (c *Client) ModifyNetworkInfo(ctx context.Context, instanceID string, req *
 	}
 
 	var result ModifyNetworkInfoResponse
+	if err := core.ParseResponse(resp, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// StorageInfo represents storage information
+type StorageInfo struct {
+	StorageType string `json:"storageType"`
+	StorageSize int    `json:"storageSize"`
+}
+
+// GetStorageInfoResponse is the response for GetStorageInfo
+type GetStorageInfoResponse struct {
+	PostgreSQLResponse
+	StorageInfo
+}
+
+// GetStorageInfo retrieves storage information for an instance.
+//
+// API Reference:
+// https://docs.nhncloud.com/ko/Database/RDS%20for%20PostgreSQL/ko/api-guide-v3.0/#_66
+func (c *Client) GetStorageInfo(ctx context.Context, instanceID string) (*GetStorageInfoResponse, error) {
+	if instanceID == "" {
+		return nil, &core.ValidationError{Field: "instanceID", Message: "instance ID is required"}
+	}
+
+	path := fmt.Sprintf("/v1.0/db-instances/%s/storage-info", instanceID)
+	req, err := http.NewRequestWithContext(ctx, "GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.core.Do(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var result GetStorageInfoResponse
 	if err := core.ParseResponse(resp, &result); err != nil {
 		return nil, err
 	}
@@ -138,7 +178,7 @@ func (c *Client) ModifyStorageInfo(ctx context.Context, instanceID string, req *
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	path := fmt.Sprintf("/v3.0/db-instances/%s/storage-info", instanceID)
+	path := fmt.Sprintf("/v1.0/db-instances/%s/storage-info", instanceID)
 	httpReq, err := http.NewRequestWithContext(ctx, "PUT", path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
@@ -181,7 +221,7 @@ func (c *Client) ModifyDeletionProtection(ctx context.Context, instanceID string
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	path := fmt.Sprintf("/v3.0/db-instances/%s/deletion-protection", instanceID)
+	path := fmt.Sprintf("/v1.0/db-instances/%s/deletion-protection", instanceID)
 	httpReq, err := http.NewRequestWithContext(ctx, "PUT", path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
