@@ -26,6 +26,10 @@ This is an unofficial, community-driven Go SDK for NHN Cloud, designed to provid
 go get github.com/haung921209/nhn-cloud-sdk-go
 ```
 
+## Configuration
+
+For detailed authentication setup (Env Vars, Config File, SSL), see [Configuration Guide](docs/CONFIGURATION.md).
+
 ## Basic Usage
 
 ```go
