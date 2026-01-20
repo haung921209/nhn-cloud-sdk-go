@@ -3,6 +3,7 @@ package object
 import (
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -343,7 +344,7 @@ func (c *Client) DeleteContainer(ctx context.Context, containerName string) erro
 }
 
 func (c *Client) ListObjects(ctx context.Context, containerName string, input *ListObjectsInput) (*ListObjectsOutput, error) {
-	path := "/" + containerName + "?format=json"
+	path := "/" + containerName + "?format=xml"
 	if input != nil {
 		if input.Prefix != "" {
 			path += "&prefix=" + input.Prefix
@@ -369,12 +370,46 @@ func (c *Client) ListObjects(ctx context.Context, containerName string, input *L
 		return nil, fmt.Errorf("list objects in %s: status %d", containerName, resp.StatusCode)
 	}
 
-	var objects []Object
-	if err := json.NewDecoder(resp.Body).Decode(&objects); err != nil {
-		return nil, fmt.Errorf("list objects in %s: decode: %w", containerName, err)
+	var result struct {
+		Container struct {
+			Name string `xml:"name,attr"`
+		} `xml:"container"`
+		Objects []struct {
+			Name         string `xml:"name"`
+			Hash         string `xml:"hash"`
+			Bytes        int64  `xml:"bytes"`
+			ContentType  string `xml:"content_type"`
+			LastModified string `xml:"last_modified"`
+		} `xml:"object"`
+		CommonPrefixes []struct {
+			Prefix string `xml:"name,attr"`
+		} `xml:"subdir"`
 	}
 
-	return &ListObjectsOutput{Objects: objects}, nil
+	if err := xml.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("list objects %s: decode: %w", containerName, err)
+	}
+
+	objects := make([]Object, len(result.Objects))
+	for i, o := range result.Objects {
+		objects[i] = Object{
+			Name:         o.Name,
+			Hash:         o.Hash,
+			Bytes:        o.Bytes,
+			ContentType:  o.ContentType,
+			LastModified: o.LastModified,
+		}
+	}
+
+	prefixes := make([]string, len(result.CommonPrefixes))
+	for i, p := range result.CommonPrefixes {
+		prefixes[i] = p.Prefix
+	}
+
+	return &ListObjectsOutput{
+		Objects:        objects,
+		CommonPrefixes: prefixes,
+	}, nil
 }
 
 func (c *Client) PutObject(ctx context.Context, input *PutObjectInput) (*PutObjectOutput, error) {

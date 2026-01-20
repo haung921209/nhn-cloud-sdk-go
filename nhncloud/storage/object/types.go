@@ -123,7 +123,8 @@ type ListObjectsInput struct {
 
 // ListObjectsOutput contains the list of objects
 type ListObjectsOutput struct {
-	Objects []Object
+	Objects        []Object
+	CommonPrefixes []string
 }
 
 // ObjectInfo represents detailed object information from HEAD request
