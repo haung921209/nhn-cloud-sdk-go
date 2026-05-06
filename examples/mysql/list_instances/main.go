@@ -44,8 +44,11 @@ func main() {
 		fmt.Printf("    Status: %s\n", inst.DBInstanceStatus)
 		fmt.Printf("    Version: %s\n", inst.DBVersion)
 		fmt.Printf("    Port: %d\n", inst.DBPort)
-		fmt.Printf("    Storage: %s (%dGB)\n", inst.Storage.StorageType, inst.Storage.StorageSize)
-		fmt.Printf("    Created: %s\n", inst.CreatedAt)
+		if inst.Storage != nil {
+			fmt.Printf("    Storage: %s (%dGB)\n", inst.Storage.StorageType, inst.Storage.StorageSize)
+		}
+		// Ref: docs/api-specs/database/rds-mysql-v4.0.md — DatabaseInstance uses createdYmdt (not createdAt)
+		fmt.Printf("    Created: %s\n", inst.CreatedYmdt)
 		fmt.Println()
 	}
 }
