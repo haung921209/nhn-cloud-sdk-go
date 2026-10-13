@@ -50,6 +50,25 @@ func TestClientGET(t *testing.T) {
 	}
 }
 
+func TestClientWithDefaultHeaders(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get("OpenStack-API-Version"); got != "container-infra latest" {
+			t.Errorf("expected default header to be sent, got %q", got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"message": "success"})
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, &mockTokenProvider{token: "test-token"},
+		WithDefaultHeaders(map[string]string{"OpenStack-API-Version": "container-infra latest"}))
+
+	var result map[string]string
+	if err := client.GET(context.Background(), "/test", &result); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestClientPOST(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

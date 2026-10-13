@@ -27,11 +27,12 @@ func (e *APIError) Error() string {
 }
 
 type Client struct {
-	BaseURL       string
-	HTTPClient    *http.Client
-	TokenProvider TokenProvider
-	Debug         bool
-	UserAgent     string
+	BaseURL        string
+	HTTPClient     *http.Client
+	TokenProvider  TokenProvider
+	Debug          bool
+	UserAgent      string
+	DefaultHeaders map[string]string
 }
 
 type ClientOption func(*Client)
@@ -39,6 +40,15 @@ type ClientOption func(*Client)
 func WithHTTPClient(hc *http.Client) ClientOption {
 	return func(c *Client) {
 		c.HTTPClient = hc
+	}
+}
+
+// WithDefaultHeaders sets headers applied to every request made by this client.
+// Used for service-specific requirements such as the OpenStack microversion
+// header that NKS (container-infra) requires on its node group endpoints.
+func WithDefaultHeaders(headers map[string]string) ClientOption {
+	return func(c *Client) {
+		c.DefaultHeaders = headers
 	}
 }
 
@@ -121,6 +131,9 @@ func (c *Client) Request(ctx context.Context, method, endpoint string, body inte
 	req.Header.Set("Accept", "application/json")
 	if contentType != "" {
 		req.Header.Set("Content-Type", contentType)
+	}
+	for k, v := range c.DefaultHeaders {
+		req.Header.Set(k, v)
 	}
 
 	if c.TokenProvider != nil {
