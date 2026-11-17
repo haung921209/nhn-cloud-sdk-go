@@ -90,3 +90,55 @@ func TestTransportPassthroughWithNilBody(t *testing.T) {
 	}
 	resp.Body.Close()
 }
+
+func TestTransportCapturePermissionsAndRedaction(t *testing.T) {
+	const secret = "s3cr3t-value-do-not-print"
+	dir := filepath.Join(t.TempDir(), "capture")
+	t.Setenv("NHN_SDK_CAPTURE_DIR", dir)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/pem" {
+			_, _ = w.Write([]byte("-----BEGIN PRIVATE KEY-----\n" + secret))
+			return
+		}
+		_, _ = w.Write([]byte(`{"name":"db-01","dbPassword":"` + secret + `"}`))
+	}))
+	defer srv.Close()
+
+	c := &http.Client{Transport: NewTransport(http.DefaultTransport)}
+	for _, p := range []string{"/v1/instances", "/pem"} {
+		resp, err := c.Get(srv.URL + p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if !strings.Contains(string(body), secret) {
+			t.Fatalf("caller must still see the unredacted body, got %q", body)
+		}
+	}
+
+	info, err := os.Stat(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if perm := info.Mode().Perm(); perm != 0o700 {
+		t.Errorf("capture dir mode = %o, want 700", perm)
+	}
+	entries, _ := os.ReadDir(dir)
+	if len(entries) != 1 {
+		t.Fatalf("expected only the JSON response to be captured, got %d files", len(entries))
+	}
+	path := filepath.Join(dir, entries[0].Name())
+	fi, _ := os.Stat(path)
+	if perm := fi.Mode().Perm(); perm != 0o600 {
+		t.Errorf("capture file mode = %o, want 600", perm)
+	}
+	data, _ := os.ReadFile(path)
+	if strings.Contains(string(data), secret) {
+		t.Errorf("capture file contains secret: %s", data)
+	}
+	if !strings.Contains(string(data), `"name":"db-01"`) {
+		t.Errorf("capture file lost non-sensitive fields: %s", data)
+	}
+}
