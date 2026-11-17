@@ -95,7 +95,14 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		return resp, nil
 	}
 
-	slug := strings.ReplaceAll(strings.Trim(req.URL.Path, "/"), "/", "_")
+	// The file name comes from the redacted path, so an appkey in the path
+	// does not end up in a directory listing.
+	slug := strings.Map(func(r rune) rune {
+		if r == '-' || r == '.' || r == '_' || r >= '0' && r <= '9' || r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' {
+			return r
+		}
+		return '_'
+	}, strings.Trim(redact.Path(req.URL.Path), "/"))
 	if slug == "" {
 		slug = "root"
 	}
@@ -103,9 +110,8 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		slug = slug[:80]
 	}
 	name := fmt.Sprintf("%s_%s_%d.json", req.Method, slug, time.Now().UnixNano())
-	// A new directory is created 0700. An existing one is the user's choice
-	// and keeps its mode; the files inside are still written 0600.
-	if mkErr := os.MkdirAll(dir, 0o700); mkErr == nil {
+	// The directory only holds captures: keep it 0700, also when it existed.
+	if mkErr := os.MkdirAll(dir, 0o700); mkErr == nil && os.Chmod(dir, 0o700) == nil {
 		_ = os.WriteFile(filepath.Join(dir, name), redacted, 0o600)
 	}
 	return resp, nil

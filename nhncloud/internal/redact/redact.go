@@ -87,15 +87,7 @@ func URL(u *url.URL) string {
 	}
 	c := *u
 	c.User = nil
-	// Some APIs carry the appkey as a path segment: /appkey(s)/<appkey>/...
-	if segs := strings.Split(c.Path, "/"); len(segs) > 1 {
-		for i := 0; i+1 < len(segs); i++ {
-			if s := strings.ToLower(segs[i]); (s == "appkey" || s == "appkeys") && segs[i+1] != "" {
-				segs[i+1] = Mask
-			}
-		}
-		c.Path, c.RawPath = strings.Join(segs, "/"), ""
-	}
+	c.Path, c.RawPath = Path(c.Path), ""
 	if c.RawQuery != "" {
 		q := c.Query()
 		for k := range q {
@@ -194,4 +186,16 @@ func Value(v interface{}) string {
 // which belongs to the calling program.
 func Debugf(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, args...)
+}
+
+// Path masks the segment after "appkey" or "appkeys"; some APIs carry the
+// appkey in the path (/appkey/<appkey>/...).
+func Path(p string) string {
+	segs := strings.Split(p, "/")
+	for i := 0; i+1 < len(segs); i++ {
+		if s := strings.ToLower(segs[i]); (s == "appkey" || s == "appkeys") && segs[i+1] != "" {
+			segs[i+1] = Mask
+		}
+	}
+	return strings.Join(segs, "/")
 }

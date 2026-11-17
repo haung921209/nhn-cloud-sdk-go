@@ -142,3 +142,38 @@ func TestTransportCapturePermissionsAndRedaction(t *testing.T) {
 		t.Errorf("capture file lost non-sensitive fields: %s", data)
 	}
 }
+
+// An existing world-readable capture directory is tightened, and an appkey in
+// the request path does not appear in the capture file name.
+func TestTransportCaptureExistingDirAndAppKeyPath(t *testing.T) {
+	const appkey = "AppKeyInPath123"
+	dir := filepath.Join(t.TempDir(), "capture")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("NHN_SDK_CAPTURE_DIR", dir)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer srv.Close()
+	c := &http.Client{Transport: NewTransport(http.DefaultTransport)}
+	resp, err := c.Get(srv.URL + "/keymanager/v1.3/appkey/" + appkey + "/secrets/abc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+
+	if info, _ := os.Stat(dir); info.Mode().Perm() != 0o700 {
+		t.Errorf("existing capture dir mode = %o, want 700", info.Mode().Perm())
+	}
+	entries, _ := os.ReadDir(dir)
+	if len(entries) != 1 {
+		t.Fatalf("want 1 capture file, got %d", len(entries))
+	}
+	if strings.Contains(entries[0].Name(), appkey) {
+		t.Errorf("capture file name leaks the appkey: %s", entries[0].Name())
+	}
+}
