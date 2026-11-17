@@ -12,6 +12,9 @@ import (
 
 func TestTransportSavesResponseWhenEnvSet(t *testing.T) {
 	dir := t.TempDir()
+	if err := os.Chmod(dir, 0o700); err != nil { // a private dir is written to directly
+		t.Fatal(err)
+	}
 	t.Setenv("NHN_SDK_CAPTURE_DIR", dir)
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -143,11 +146,12 @@ func TestTransportCapturePermissionsAndRedaction(t *testing.T) {
 	}
 }
 
-// An existing world-readable capture directory is tightened, and an appkey in
-// the request path does not appear in the capture file name.
+// An existing directory other users can access keeps its mode; captures go
+// to a private subdirectory. An appkey in the request path does not appear in
+// the capture file name.
 func TestTransportCaptureExistingDirAndAppKeyPath(t *testing.T) {
 	const appkey = "AppKeyInPath123"
-	dir := filepath.Join(t.TempDir(), "capture")
+	dir := filepath.Join(t.TempDir(), "shared")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -166,10 +170,15 @@ func TestTransportCaptureExistingDirAndAppKeyPath(t *testing.T) {
 	}
 	resp.Body.Close()
 
-	if info, _ := os.Stat(dir); info.Mode().Perm() != 0o700 {
-		t.Errorf("existing capture dir mode = %o, want 700", info.Mode().Perm())
+	if info, _ := os.Stat(dir); info.Mode().Perm() != 0o755 {
+		t.Errorf("shared dir mode changed to %o", info.Mode().Perm())
 	}
-	entries, _ := os.ReadDir(dir)
+	sub := filepath.Join(dir, "nhn-sdk-capture")
+	info, err := os.Stat(sub)
+	if err != nil || info.Mode().Perm() != 0o700 {
+		t.Fatalf("private capture subdir: %v %v", info, err)
+	}
+	entries, _ := os.ReadDir(sub)
 	if len(entries) != 1 {
 		t.Fatalf("want 1 capture file, got %d", len(entries))
 	}

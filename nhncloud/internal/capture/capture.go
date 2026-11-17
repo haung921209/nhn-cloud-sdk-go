@@ -87,9 +87,6 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if readErr != nil {
 		return resp, nil
 	}
-	warnOnce.Do(func() {
-		fmt.Fprintf(os.Stderr, "nhn-cloud-sdk-go: %s is set; writing redacted response bodies to %s\n", EnvVar, dir)
-	})
 	redacted, ok := redact.JSON(body)
 	if !ok {
 		return resp, nil
@@ -110,9 +107,48 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		slug = slug[:80]
 	}
 	name := fmt.Sprintf("%s_%s_%d.json", req.Method, slug, time.Now().UnixNano())
-	// The directory only holds captures: keep it 0700, also when it existed.
-	if mkErr := os.MkdirAll(dir, 0o700); mkErr == nil && os.Chmod(dir, 0o700) == nil {
-		_ = os.WriteFile(filepath.Join(dir, name), redacted, 0o600)
+	target, err := privateDir(dir)
+	warnOnce.Do(func() {
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "nhn-cloud-sdk-go: %s is set but captures cannot be written: %v\n", EnvVar, err)
+			return
+		}
+		fmt.Fprintf(os.Stderr, "nhn-cloud-sdk-go: %s is set; writing redacted response bodies to %s\n", EnvVar, target)
+	})
+	if err == nil {
+		_ = os.WriteFile(filepath.Join(target, name), redacted, 0o600)
 	}
 	return resp, nil
+}
+
+// privateDir returns a directory only the user can access for captures. A new
+// dir is created 0700. An existing dir is never re-moded (it may be shared,
+// like /tmp); when other users can access it, captures go to a 0700
+// subdirectory inside it instead.
+func privateDir(dir string) (string, error) {
+	info, err := os.Stat(dir)
+	if os.IsNotExist(err) {
+		return dir, os.MkdirAll(dir, 0o700)
+	}
+	if err != nil {
+		return "", err
+	}
+	if !info.IsDir() {
+		return "", fmt.Errorf("%s is not a directory", dir)
+	}
+	if info.Mode().Perm()&0o077 == 0 {
+		return dir, nil
+	}
+	sub := filepath.Join(dir, "nhn-sdk-capture")
+	if err := os.Mkdir(sub, 0o700); err != nil && !os.IsExist(err) {
+		return "", err
+	}
+	st, err := os.Lstat(sub)
+	if err != nil {
+		return "", err
+	}
+	if !st.IsDir() || st.Mode().Perm()&0o077 != 0 {
+		return "", fmt.Errorf("%s exists and is not a private directory", sub)
+	}
+	return sub, nil
 }
