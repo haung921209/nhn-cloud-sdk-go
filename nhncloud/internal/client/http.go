@@ -11,6 +11,8 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/internal/redact"
 )
 
 type APIError struct {
@@ -226,60 +228,17 @@ func (c *Client) DeleteWithBody(ctx context.Context, endpoint string, body inter
 }
 
 func (c *Client) debugRequest(req *http.Request, body interface{}) {
-	fmt.Printf("=== REQUEST ===\n")
-	fmt.Printf("%s %s\n", req.Method, req.URL.String())
-
-	fmt.Printf("Headers:\n")
-	for name, values := range req.Header {
-		for _, value := range values {
-			lowerName := strings.ToLower(name)
-			if lowerName == "authorization" || lowerName == "x-nhn-authorization" || lowerName == "x-auth-token" {
-				fmt.Printf("  %s: ***\n", name)
-			} else {
-				fmt.Printf("  %s: %s\n", name, value)
-			}
-		}
+	redact.Debugf("=== REQUEST ===\n%s %s\nHeaders:\n%s", req.Method, redact.URL(req.URL), redact.Headers(req.Header))
+	if b := redact.Value(body); b != "" {
+		redact.Debugf("Body: %s\n", b)
 	}
-
-	if body != nil {
-		switch v := body.(type) {
-		case string:
-			fmt.Printf("Body: %s\n", v)
-		case url.Values:
-			fmt.Printf("Body: %s\n", v.Encode())
-		default:
-			if jsonData, err := json.MarshalIndent(body, "", "  "); err == nil {
-				fmt.Printf("Body: %s\n", string(jsonData))
-			} else {
-				fmt.Printf("Body: %+v\n", body)
-			}
-		}
-	}
-	fmt.Printf("===============\n")
+	redact.Debugf("===============\n")
 }
 
 func (c *Client) debugResponse(resp *http.Response, body []byte) {
-	fmt.Printf("=== RESPONSE ===\n")
-	fmt.Printf("Status: %s\n", resp.Status)
-
-	fmt.Printf("Headers:\n")
-	for name, values := range resp.Header {
-		for _, value := range values {
-			fmt.Printf("  %s: %s\n", name, value)
-		}
+	redact.Debugf("=== RESPONSE ===\nStatus: %s\nHeaders:\n%s", resp.Status, redact.Headers(resp.Header))
+	if b := redact.Body(body); b != "" {
+		redact.Debugf("Body: %s\n", b)
 	}
-
-	if len(body) > 0 {
-		var jsonData interface{}
-		if json.Unmarshal(body, &jsonData) == nil {
-			if prettyJSON, err := json.MarshalIndent(jsonData, "", "  "); err == nil {
-				fmt.Printf("Body: %s\n", string(prettyJSON))
-			} else {
-				fmt.Printf("Body: %s\n", string(body))
-			}
-		} else {
-			fmt.Printf("Body: %s\n", string(body))
-		}
-	}
-	fmt.Printf("================\n")
+	redact.Debugf("================\n")
 }
