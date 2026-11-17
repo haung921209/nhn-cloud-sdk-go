@@ -110,3 +110,13 @@ func TestURLMasksQueryAndUserinfo(t *testing.T) {
 		t.Errorf("URL lost useful parts: %s", out)
 	}
 }
+
+// Appkeys and API keys sent as query parameters are masked too.
+func TestURLMasksAppKeyQuery(t *testing.T) {
+	for _, q := range []string{"appkey", "appKey", "app_key", "api_key", "apiKey"} {
+		u, _ := url.Parse("https://api.example.com/v1/items?" + q + "=" + secret + "&limit=10")
+		if out := URL(u); strings.Contains(out, secret) || !strings.Contains(out, "limit=10") {
+			t.Errorf("%s: %s", q, out)
+		}
+	}
+}

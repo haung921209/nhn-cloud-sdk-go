@@ -34,6 +34,7 @@ var sensitiveHeaderParts = []string{"secret", "token", "password", "key", "auth"
 var sensitiveKeyParts = []string{
 	"password", "passwd", "secret", "token", "privatekey", "private_key",
 	"accesskey", "access_key", "secretkey", "credential", "kubeconfig", "payload",
+	"appkey", "app_key", "apikey", "api_key",
 }
 
 // IsSensitiveHeader reports whether a header value must not be printed.
