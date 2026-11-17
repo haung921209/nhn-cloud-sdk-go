@@ -35,6 +35,7 @@ var sensitiveKeyParts = []string{
 	"password", "passwd", "secret", "token", "privatekey", "private_key",
 	"accesskey", "access_key", "secretkey", "credential", "kubeconfig", "payload",
 	"appkey", "app_key", "apikey", "api_key",
+	"symmetrickey", "plaintext", "adminpass",
 }
 
 // IsSensitiveHeader reports whether a header value must not be printed.
@@ -46,7 +47,9 @@ func IsSensitiveHeader(name string) bool {
 // IsSensitiveKey reports whether a JSON object key (or query parameter)
 // holds a value that must not be printed.
 func IsSensitiveKey(key string) bool {
-	return containsAny(strings.ToLower(key), sensitiveKeyParts)
+	k := strings.ToLower(key)
+	// "key" alone is the key material in key manager responses.
+	return k == "key" || containsAny(k, sensitiveKeyParts)
 }
 
 func containsAny(s string, parts []string) bool {
@@ -84,6 +87,15 @@ func URL(u *url.URL) string {
 	}
 	c := *u
 	c.User = nil
+	// Some APIs carry the appkey as a path segment: /appkey(s)/<appkey>/...
+	if segs := strings.Split(c.Path, "/"); len(segs) > 1 {
+		for i := 0; i+1 < len(segs); i++ {
+			if s := strings.ToLower(segs[i]); (s == "appkey" || s == "appkeys") && segs[i+1] != "" {
+				segs[i+1] = Mask
+			}
+		}
+		c.Path, c.RawPath = strings.Join(segs, "/"), ""
+	}
 	if c.RawQuery != "" {
 		q := c.Query()
 		for k := range q {

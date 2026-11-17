@@ -103,6 +103,8 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		slug = slug[:80]
 	}
 	name := fmt.Sprintf("%s_%s_%d.json", req.Method, slug, time.Now().UnixNano())
+	// A new directory is created 0700. An existing one is the user's choice
+	// and keeps its mode; the files inside are still written 0600.
 	if mkErr := os.MkdirAll(dir, 0o700); mkErr == nil {
 		_ = os.WriteFile(filepath.Join(dir, name), redacted, 0o600)
 	}

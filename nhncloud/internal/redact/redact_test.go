@@ -120,3 +120,18 @@ func TestURLMasksAppKeyQuery(t *testing.T) {
 		}
 	}
 }
+
+// Key manager material and appkeys in URL paths are masked as well.
+func TestMasksKeyMaterialAndAppKeyPath(t *testing.T) {
+	body := []byte(`{"body":{"symmetricKey":"` + secret + `","plaintext":"` + secret + `","localKeyPlaintext":"` + secret + `","key":"` + secret + `","keyId":"k1"}}`)
+	out := Body(body)
+	if strings.Contains(out, secret) || !strings.Contains(out, "k1") {
+		t.Errorf("body: %s", out)
+	}
+	for _, p := range []string{"/keymanager/v1.3/appkey/" + secret + "/secrets/1", "/v1/appkeys/" + secret + "/items"} {
+		u, _ := url.Parse("https://api.example.com" + p)
+		if got := URL(u); strings.Contains(got, secret) {
+			t.Errorf("path: %s", got)
+		}
+	}
+}
