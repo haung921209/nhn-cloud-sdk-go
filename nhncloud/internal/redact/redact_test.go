@@ -135,3 +135,16 @@ func TestMasksKeyMaterialAndAppKeyPath(t *testing.T) {
 		}
 	}
 }
+
+// Authorization values in a query or a JSON body are masked; unrelated
+// fields such as authorityType stay readable.
+func TestMasksAuthorizationKeys(t *testing.T) {
+	u, _ := url.Parse("https://api.example.com/v1/items?authorization=Bearer%20" + secret + "&auth=" + secret)
+	if got := URL(u); strings.Contains(got, secret) {
+		t.Errorf("url: %s", got)
+	}
+	out := Body([]byte(`{"authorization":"Bearer ` + secret + `","Cookie":"` + secret + `","authorityType":"DDL"}`))
+	if strings.Contains(out, secret) || !strings.Contains(out, "DDL") {
+		t.Errorf("body: %s", out)
+	}
+}

@@ -35,7 +35,7 @@ var sensitiveKeyParts = []string{
 	"password", "passwd", "secret", "token", "privatekey", "private_key",
 	"accesskey", "access_key", "secretkey", "credential", "kubeconfig", "payload",
 	"appkey", "app_key", "apikey", "api_key",
-	"symmetrickey", "plaintext", "adminpass",
+	"symmetrickey", "plaintext", "adminpass", "authorization", "cookie",
 }
 
 // IsSensitiveHeader reports whether a header value must not be printed.
@@ -48,8 +48,9 @@ func IsSensitiveHeader(name string) bool {
 // holds a value that must not be printed.
 func IsSensitiveKey(key string) bool {
 	k := strings.ToLower(key)
-	// "key" alone is the key material in key manager responses.
-	return k == "key" || containsAny(k, sensitiveKeyParts)
+	// "key" alone is the key material in key manager responses; "auth" alone
+	// is matched exactly so fields like authorityType stay readable.
+	return k == "key" || k == "auth" || containsAny(k, sensitiveKeyParts)
 }
 
 func containsAny(s string, parts []string) bool {
