@@ -262,3 +262,52 @@ func TestAPIErrorString(t *testing.T) {
 		})
 	}
 }
+
+func TestClientNeutronErrorMessage(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(`{"NeutronError": {"type": "OverQuota", "message": "Quota exceeded for resources: ['vpc'].", "detail": ""}}`))
+	}))
+	defer server.Close()
+
+	err := NewClient(server.URL, nil).GET(context.Background(), "/v2.0/vpcs", nil)
+	apiErr, ok := err.(*APIError)
+	if !ok {
+		t.Fatalf("expected *APIError, got %T %v", err, err)
+	}
+	if apiErr.StatusCode != 409 || apiErr.ErrorCode != "OverQuota" || apiErr.Message != "Quota exceeded for resources: ['vpc']." {
+		t.Fatalf("server reason lost: %+v", apiErr)
+	}
+}
+
+func TestClientHeaderFailureOn200(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"header": {"isSuccessful": false, "resultCode": 4010001, "resultMessage": "Invalid appKey."}, "body": null}`))
+	}))
+	defer server.Close()
+
+	var out map[string]interface{}
+	err := NewClient(server.URL, nil).GET(context.Background(), "/zones", &out)
+	apiErr, ok := err.(*APIError)
+	if !ok {
+		t.Fatalf("a 200 with isSuccessful=false must be an error, got %T %v", err, err)
+	}
+	if apiErr.ErrorCode != "4010001" || apiErr.Message != "Invalid appKey." {
+		t.Fatalf("unexpected error: %+v", apiErr)
+	}
+}
+
+func TestClientHeaderSuccessPasses(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"header": {"isSuccessful": true, "resultCode": 0, "resultMessage": "SUCCESS"}, "id": "x"}`))
+	}))
+	defer server.Close()
+
+	var out map[string]interface{}
+	if err := NewClient(server.URL, nil).GET(context.Background(), "/x", &out); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out["id"] != "x" {
+		t.Fatalf("result not decoded: %v", out)
+	}
+}

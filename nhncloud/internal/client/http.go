@@ -188,10 +188,34 @@ func (c *Client) Request(ctx context.Context, method, endpoint string, body inte
 						apiError.ErrorCode = fmt.Sprintf("%d", int(code))
 					}
 				}
+				if _, ok := errResp["message"]; !ok && errResp["header"] == nil {
+					// OpenStack-style errors wrap the reason in one object:
+					// {"NeutronError": {"type": ..., "message": ...}},
+					// {"badRequest": {"message": ..., "code": 400}}.
+					for kind, v := range errResp {
+						inner, ok := v.(map[string]interface{})
+						if !ok {
+							continue
+						}
+						if msg, ok := inner["message"].(string); ok && msg != "" {
+							apiError.Message = msg
+							if t, ok := inner["type"].(string); ok && t != "" {
+								apiError.ErrorCode = t
+							} else {
+								apiError.ErrorCode = kind
+							}
+							break
+						}
+					}
+				}
 			}
 		}
 
 		return apiError
+	}
+
+	if err := headerFailure(resp.StatusCode, respBody); err != nil {
+		return err
 	}
 
 	if result != nil && len(respBody) > 0 {
@@ -201,6 +225,22 @@ func (c *Client) Request(ctx context.Context, method, endpoint string, body inte
 	}
 
 	return nil
+}
+
+// headerFailure reports a 2xx response whose body says it failed:
+// {"header": {"isSuccessful": false, "resultCode": N, "resultMessage": "..."}}.
+func headerFailure(status int, body []byte) error {
+	var r struct {
+		Header *struct {
+			IsSuccessful  *bool       `json:"isSuccessful"`
+			ResultCode    json.Number `json:"resultCode"`
+			ResultMessage string      `json:"resultMessage"`
+		} `json:"header"`
+	}
+	if len(body) == 0 || json.Unmarshal(body, &r) != nil || r.Header == nil || r.Header.IsSuccessful == nil || *r.Header.IsSuccessful {
+		return nil
+	}
+	return &APIError{StatusCode: status, ErrorCode: r.Header.ResultCode.String(), Message: r.Header.ResultMessage}
 }
 
 func (c *Client) GET(ctx context.Context, endpoint string, result interface{}) error {
