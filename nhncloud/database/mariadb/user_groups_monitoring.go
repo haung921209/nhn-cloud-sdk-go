@@ -87,7 +87,7 @@ func (c *Client) GetUserGroup(ctx context.Context, groupID string) (*GetUserGrou
 type CreateUserGroupRequest struct {
 	UserGroupName string   `json:"userGroupName"`
 	MemberIDs     []string `json:"memberIds,omitempty"`
-	SelectAllYN   bool     `json:"selectAllYN,omitempty"`
+	SelectAllYN   bool     `json:"selectAll,omitempty"`
 }
 
 // CreateUserGroupResponse is the response for CreateUserGroup
