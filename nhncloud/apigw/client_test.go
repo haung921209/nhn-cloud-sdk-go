@@ -3,6 +3,7 @@ package apigw
 import (
 	"context"
 	"encoding/json"
+	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/auth"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -41,7 +42,7 @@ func TestRequestsUseV2AndBearerToken(t *testing.T) {
 	t.Setenv("HOME", home)
 	os.MkdirAll(filepath.Join(home, ".nhncloud"), 0700)
 	cache, _ := json.Marshal(map[string]interface{}{"token": "tok", "expires_at": time.Now().Add(time.Hour)})
-	os.WriteFile(filepath.Join(home, ".nhncloud", "postgresql_token_cache.json"), cache, 0600)
+	os.WriteFile(auth.TokenCacheFile(home, "id"), cache, 0600)
 
 	var got *http.Request
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
