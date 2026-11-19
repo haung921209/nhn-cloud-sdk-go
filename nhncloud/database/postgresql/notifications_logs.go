@@ -270,6 +270,28 @@ type MetricStatisticValue struct {
 	Value     float64 `json:"value"`     // a number on the live API (the guide says string)
 }
 
+// UnmarshalJSON accepts value as a number or as a numeric string.
+func (v *MetricStatisticValue) UnmarshalJSON(b []byte) error {
+	var raw struct {
+		Timestamp int64       `json:"timestamp"`
+		Value     json.Number `json:"value"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	v.Timestamp = raw.Timestamp
+	if raw.Value == "" {
+		v.Value = 0
+		return nil
+	}
+	f, err := raw.Value.Float64()
+	if err != nil {
+		return fmt.Errorf("metric value %q: %w", raw.Value, err)
+	}
+	v.Value = f
+	return nil
+}
+
 // GetMetricStatisticsResponse is the response for GetMetricStatistics
 type GetMetricStatisticsResponse struct {
 	PostgreSQLResponse
