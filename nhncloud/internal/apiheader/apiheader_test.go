@@ -17,3 +17,12 @@ func TestCheck(t *testing.T) {
 		t.Fatalf("Check(failed header) = %v, want code 51000 and the message", err)
 	}
 }
+
+// Some services send resultCode as a string; a failure must still be one.
+func TestCheckStringResultCode(t *testing.T) {
+	err := Check([]byte(`{"header":{"isSuccessful":false,"resultCode":"ERROR_INVALID_APP_KEY","resultMessage":"Invalid AppKey"}}`))
+	e, ok := err.(*Error)
+	if !ok || e.Code != "ERROR_INVALID_APP_KEY" || e.Message != "Invalid AppKey" {
+		t.Fatalf("got %#v", err)
+	}
+}

@@ -1,10 +1,13 @@
 package client
 
 import (
+	"errors"
+
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/haung921209/nhn-cloud-sdk-go/nhncloud/internal/apiheader"
 	"io"
 	"net/http"
 	"net/url"
@@ -230,17 +233,11 @@ func (c *Client) Request(ctx context.Context, method, endpoint string, body inte
 // headerFailure reports a 2xx response whose body says it failed:
 // {"header": {"isSuccessful": false, "resultCode": N, "resultMessage": "..."}}.
 func headerFailure(status int, body []byte) error {
-	var r struct {
-		Header *struct {
-			IsSuccessful  *bool       `json:"isSuccessful"`
-			ResultCode    json.Number `json:"resultCode"`
-			ResultMessage string      `json:"resultMessage"`
-		} `json:"header"`
+	var he *apiheader.Error
+	if errors.As(apiheader.Check(body), &he) {
+		return &APIError{StatusCode: status, ErrorCode: he.Code, Message: he.Message}
 	}
-	if len(body) == 0 || json.Unmarshal(body, &r) != nil || r.Header == nil || r.Header.IsSuccessful == nil || *r.Header.IsSuccessful {
-		return nil
-	}
-	return &APIError{StatusCode: status, ErrorCode: r.Header.ResultCode.String(), Message: r.Header.ResultMessage}
+	return nil
 }
 
 func (c *Client) GET(ctx context.Context, endpoint string, result interface{}) error {
