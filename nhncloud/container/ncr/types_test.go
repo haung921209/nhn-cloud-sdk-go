@@ -45,61 +45,6 @@ func TestResponseHeader_Parse(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Registry
-// ---------------------------------------------------------------------------
-
-func TestRegistry_RequiredFields(t *testing.T) {
-	testutil.AssertAllRequiredFields(t, reflect.TypeOf(Registry{}), []string{
-		"ID",
-		"Name",
-		"URI",
-		"IsPublic",
-		"Status",
-		"CreatedAt",
-		"UpdatedAt",
-	})
-}
-
-func TestRegistry_JSONTags(t *testing.T) {
-	typ := reflect.TypeOf(Registry{})
-	testutil.AssertStructHasJSONTag(t, typ, "ID", "id")
-	testutil.AssertStructHasJSONTag(t, typ, "Name", "name")
-	testutil.AssertStructHasJSONTag(t, typ, "URI", "registry_url")
-	testutil.AssertStructHasJSONTag(t, typ, "IsPublic", "isPublic")
-	testutil.AssertStructHasJSONTag(t, typ, "Status", "status")
-	testutil.AssertStructHasJSONTag(t, typ, "CreatedAt", "creation_time")
-	testutil.AssertStructHasJSONTag(t, typ, "UpdatedAt", "update_time")
-}
-
-func TestRegistry_Parse(t *testing.T) {
-	raw := `{
-		"id": 42,
-		"name": "my-registry",
-		"registry_url": "kr1-ncr.api.nhncloudservice.com/my-registry",
-		"isPublic": false,
-		"status": "ACTIVE",
-		"creation_time": "2024-01-01T00:00:00Z",
-		"update_time": "2024-06-01T00:00:00Z"
-	}`
-	var r Registry
-	if err := json.Unmarshal([]byte(raw), &r); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	if r.ID != 42 {
-		t.Errorf("ID: got %d, want 42", r.ID)
-	}
-	if r.Name != "my-registry" {
-		t.Errorf("Name: got %q, want my-registry", r.Name)
-	}
-	if r.Status != "ACTIVE" {
-		t.Errorf("Status: got %q, want ACTIVE", r.Status)
-	}
-	if r.CreatedAt != "2024-01-01T00:00:00Z" {
-		t.Errorf("CreatedAt mismatch: %q", r.CreatedAt)
-	}
-}
-
-// ---------------------------------------------------------------------------
 // ListRegistriesOutput
 // ---------------------------------------------------------------------------
 
@@ -114,29 +59,6 @@ func TestListRegistriesOutput_JSONTags(t *testing.T) {
 	typ := reflect.TypeOf(ListRegistriesOutput{})
 	testutil.AssertStructHasJSONTag(t, typ, "Header", "header")
 	testutil.AssertStructHasJSONTag(t, typ, "Registries", "registries")
-}
-
-func TestListRegistriesOutput_Parse(t *testing.T) {
-	raw := `{
-		"header": {"isSuccessful": true, "resultCode": 200, "resultMessage": "SUCCESS"},
-		"registries": [
-			{"id": 1, "name": "reg-a", "registry_url": "uri-a", "isPublic": true, "status": "ACTIVE",
-			 "creation_time": "2024-01-01T00:00:00Z", "update_time": "2024-01-02T00:00:00Z"}
-		]
-	}`
-	var out ListRegistriesOutput
-	if err := json.Unmarshal([]byte(raw), &out); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	if out.Header == nil || !out.Header.IsSuccessful {
-		t.Error("header not parsed correctly")
-	}
-	if len(out.Registries) != 1 {
-		t.Fatalf("Registries: got %d, want 1", len(out.Registries))
-	}
-	if out.Registries[0].Name != "reg-a" {
-		t.Errorf("Registries[0].Name: got %q, want reg-a", out.Registries[0].Name)
-	}
 }
 
 // ---------------------------------------------------------------------------
@@ -202,94 +124,6 @@ func TestUpdateRegistryInput_OmitemptyOnNilBool(t *testing.T) {
 	if _, ok := m["isPublic"]; ok {
 		t.Error("isPublic should be omitted when nil")
 	}
-}
-
-// ---------------------------------------------------------------------------
-// Image
-// ---------------------------------------------------------------------------
-
-func TestImage_RequiredFields(t *testing.T) {
-	testutil.AssertAllRequiredFields(t, reflect.TypeOf(Image{}), []string{
-		"ID",
-		"Name",
-		"RegistryID",
-		"PullCount",
-		"Size",
-		"CreatedAt",
-		"UpdatedAt",
-	})
-}
-
-func TestImage_JSONTags(t *testing.T) {
-	typ := reflect.TypeOf(Image{})
-	testutil.AssertStructHasJSONTag(t, typ, "ID", "id")
-	testutil.AssertStructHasJSONTag(t, typ, "Name", "name")
-	testutil.AssertStructHasJSONTag(t, typ, "RegistryID", "registryId")
-	testutil.AssertStructHasJSONTag(t, typ, "PullCount", "pullCount")
-	testutil.AssertStructHasJSONTag(t, typ, "Digest", "digest")
-	testutil.AssertStructHasJSONTag(t, typ, "Size", "size")
-	testutil.AssertStructHasJSONTag(t, typ, "CreatedAt", "createdAt")
-	testutil.AssertStructHasJSONTag(t, typ, "UpdatedAt", "updatedAt")
-}
-
-func TestImage_Parse(t *testing.T) {
-	raw := `{
-		"id": "sha256:abc123",
-		"name": "nginx",
-		"registryId": "reg-001",
-		"pullCount": 999,
-		"tags": ["latest","1.25"],
-		"digest": "sha256:abc123",
-		"size": 65536000,
-		"createdAt": "2024-01-01T00:00:00Z",
-		"updatedAt": "2024-06-01T00:00:00Z"
-	}`
-	var img Image
-	if err := json.Unmarshal([]byte(raw), &img); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	if img.Name != "nginx" {
-		t.Errorf("Name: got %q, want nginx", img.Name)
-	}
-	if img.PullCount != 999 {
-		t.Errorf("PullCount: got %d, want 999", img.PullCount)
-	}
-	if len(img.Tags) != 2 {
-		t.Errorf("Tags: got %d elements, want 2", len(img.Tags))
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Tag
-// ---------------------------------------------------------------------------
-
-func TestTag_RequiredFields(t *testing.T) {
-	testutil.AssertAllRequiredFields(t, reflect.TypeOf(Tag{}), []string{
-		"Name",
-		"Digest",
-		"Size",
-		"CreatedAt",
-	})
-}
-
-func TestTag_JSONTags(t *testing.T) {
-	typ := reflect.TypeOf(Tag{})
-	testutil.AssertStructHasJSONTag(t, typ, "Name", "name")
-	testutil.AssertStructHasJSONTag(t, typ, "Digest", "digest")
-	testutil.AssertStructHasJSONTag(t, typ, "Size", "size")
-	testutil.AssertStructHasJSONTag(t, typ, "CreatedAt", "createdAt")
-	testutil.AssertStructHasJSONTag(t, typ, "LastPulledAt", "lastPulledAt")
-}
-
-func TestTag_RoundTrip(t *testing.T) {
-	tag := Tag{
-		Name:      "v1.0",
-		Digest:    "sha256:deadbeef",
-		Size:      12345,
-		CreatedAt: "2024-01-01T00:00:00Z",
-	}
-	testutil.AssertJSONRoundTrip(t, tag,
-		`{"name":"v1.0","digest":"sha256:deadbeef","size":12345,"createdAt":"2024-01-01T00:00:00Z"}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -375,93 +209,83 @@ func TestImageScanResult_Parse(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Webhook / CreateWebhookInput
+// Response shapes from the API guide
 // ---------------------------------------------------------------------------
 
-func TestWebhook_RequiredFields(t *testing.T) {
-	testutil.AssertAllRequiredFields(t, reflect.TypeOf(Webhook{}), []string{
-		"ID",
-		"Name",
-		"RegistryID",
-		"TargetURL",
-		"Enabled",
-		"Events",
-		"CreatedAt",
-		"UpdatedAt",
-	})
-}
-
-func TestWebhook_JSONTags(t *testing.T) {
-	typ := reflect.TypeOf(Webhook{})
-	testutil.AssertStructHasJSONTag(t, typ, "ID", "id")
-	testutil.AssertStructHasJSONTag(t, typ, "Name", "name")
-	testutil.AssertStructHasJSONTag(t, typ, "RegistryID", "registryId")
-	testutil.AssertStructHasJSONTag(t, typ, "TargetURL", "targetUrl")
-	testutil.AssertStructHasJSONTag(t, typ, "Enabled", "enabled")
-	testutil.AssertStructHasJSONTag(t, typ, "Events", "events")
-	testutil.AssertStructHasJSONTag(t, typ, "CreatedAt", "createdAt")
-	testutil.AssertStructHasJSONTag(t, typ, "UpdatedAt", "updatedAt")
-}
-
-func TestCreateWebhookInput_JSONTags(t *testing.T) {
-	typ := reflect.TypeOf(CreateWebhookInput{})
-	testutil.AssertStructHasJSONTag(t, typ, "Name", "name")
-	testutil.AssertStructHasJSONTag(t, typ, "TargetURL", "targetUrl")
-	testutil.AssertStructHasJSONTag(t, typ, "Enabled", "enabled")
-	testutil.AssertStructHasJSONTag(t, typ, "Events", "events")
-}
-
-func TestCreateWebhookInput_Marshal(t *testing.T) {
-	input := CreateWebhookInput{
-		Name:      "push-hook",
-		TargetURL: "https://example.com/hook",
-		Events:    []string{"PUSH_ARTIFACT", "DELETE_ARTIFACT"},
+// The registry ID is project_id; describe-registries printed 0 because it
+// read a field "id" the API does not send.
+func TestRegistry_ParseGuideShape(t *testing.T) {
+	raw := `{"header":{"isSuccessful":true,"resultCode":200,"resultMessage":"SUCCESS"},
+		"registries":[{"project_id":2,"name":"hy","creation_time":"2023-03-14T02:41:10.525Z",
+		"repo_count":2,"metadata":{"public":"false"},"registry_id":0,"usage":57464288,
+		"uri":"example.invalid/hy"}]}`
+	var out ListRegistriesOutput
+	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		t.Fatalf("unmarshal: %v", err)
 	}
-	b, err := json.Marshal(input)
-	if err != nil {
-		t.Fatalf("marshal: %v", err)
+	r := out.Registries[0]
+	if r.ID != 2 || r.Name != "hy" || r.URI != "example.invalid/hy" || r.RepoCount != 2 || r.Metadata["public"] != "false" {
+		t.Errorf("registry %+v", r)
 	}
-	var m map[string]interface{}
-	if err := json.Unmarshal(b, &m); err != nil {
-		t.Fatalf("unmarshal result: %v", err)
+	var one GetRegistryOutput
+	if err := json.Unmarshal([]byte(`{"registry":{"project_id":3,"name":"x"}}`), &one); err != nil {
+		t.Fatal(err)
 	}
-	if m["targetUrl"] != "https://example.com/hook" {
-		t.Errorf("targetUrl: got %v", m["targetUrl"])
-	}
-	events, ok := m["events"].([]interface{})
-	if !ok || len(events) != 2 {
-		t.Errorf("events: got %v", m["events"])
+	if one.Registry.ID != 3 || one.Registry.Name != "x" {
+		t.Errorf("get registry %+v", one.Registry)
 	}
 }
 
-func TestListWebhooksOutput_Parse(t *testing.T) {
-	raw := `{
-		"header": {"isSuccessful": true, "resultCode": 200, "resultMessage": "SUCCESS"},
-		"webhooks": [
-			{
-				"id": "wh-001",
-				"name": "my-hook",
-				"registryId": "reg-001",
-				"targetUrl": "https://example.com/hook",
-				"enabled": true,
-				"events": ["PUSH_ARTIFACT"],
-				"createdAt": "2024-01-01T00:00:00Z",
-				"updatedAt": "2024-01-02T00:00:00Z"
-			}
-		]
-	}`
+// images[].id and the counters are numbers.
+func TestImage_ParseGuideShape(t *testing.T) {
+	raw := `{"images":[{"id":1,"name":"hy/busybox","project_id":2,"description":"",
+		"pull_count":8,"artifact_count":1,"creation_time":"2023-03-27T01:55:13.176Z"}]}`
+	var out ListImagesOutput
+	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	img := out.Images[0]
+	if img.ID != 1 || img.ProjectID != 2 || img.PullCount != 8 || img.ArtifactCount != 1 {
+		t.Errorf("image %+v", img)
+	}
+	var one GetImageOutput
+	if err := json.Unmarshal([]byte(`{"image":{"id":5,"name":"hy/busybox"}}`), &one); err != nil {
+		t.Fatal(err)
+	}
+	if one.Image.ID != 5 {
+		t.Errorf("get image %+v", one.Image)
+	}
+}
+
+func TestArtifact_ParseGuideShape(t *testing.T) {
+	raw := `{"artifacts":[{"digest":"sha256:ba70","id":1,"size":2003144,"type":"IMAGE",
+		"push_time":"2023-03-27T01:55:14.082Z","tags":[{"artifact_id":1,"id":1,"name":"latest","immutable":false}]}]}`
+	var out ListArtifactsOutput
+	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	a := out.Artifacts[0]
+	if a.Digest != "sha256:ba70" || a.Size != 2003144 || len(a.Tags) != 1 || a.Tags[0].Name != "latest" {
+		t.Errorf("artifact %+v", a)
+	}
+}
+
+func TestWebhook_GuideShape(t *testing.T) {
+	raw := `{"policies":[{"creation_time":"2023-03-27T22:53:16.719Z","enabled":true,
+		"event_types":["PUSH_ARTIFACT"],"id":1,"name":"test","project_id":2,
+		"targets":[{"address":"https://example.invalid","skip_cert_verify":true,"type":"http"}]}]}`
 	var out ListWebhooksOutput
 	if err := json.Unmarshal([]byte(raw), &out); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if len(out.Webhooks) != 1 {
-		t.Fatalf("Webhooks: got %d, want 1", len(out.Webhooks))
-	}
 	wh := out.Webhooks[0]
-	if wh.TargetURL != "https://example.com/hook" {
-		t.Errorf("TargetURL: got %q", wh.TargetURL)
+	if wh.ID != 1 || wh.Name != "test" || len(wh.EventTypes) != 1 || wh.Targets[0].Address != "https://example.invalid" {
+		t.Errorf("webhook %+v", wh)
 	}
-	if len(wh.Events) != 1 || wh.Events[0] != "PUSH_ARTIFACT" {
-		t.Errorf("Events: got %v", wh.Events)
+	b, _ := json.Marshal(CreateWebhookInput{Name: "h", EventTypes: []string{"PUSH_ARTIFACT"},
+		Targets: []WebhookTarget{{Address: "https://example.invalid", Type: "http"}}})
+	want := `{"name":"h","enabled":false,"event_types":["PUSH_ARTIFACT"],"targets":[{"address":"https://example.invalid","type":"http"}]}`
+	if string(b) != want {
+		t.Errorf("create body %s, want %s", b, want)
 	}
 }
