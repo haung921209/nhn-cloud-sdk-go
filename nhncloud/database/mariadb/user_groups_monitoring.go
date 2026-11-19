@@ -86,7 +86,7 @@ func (c *Client) GetUserGroup(ctx context.Context, groupID string) (*GetUserGrou
 // CreateUserGroupRequest is the request for creating a user group
 type CreateUserGroupRequest struct {
 	UserGroupName string   `json:"userGroupName"`
-	MemberIDs     []string `json:"memberIds,omitempty"`
+	MemberIDs     []string `json:"memberIds"`
 	SelectAllYN   bool     `json:"selectAll,omitempty"`
 }
 
@@ -101,8 +101,12 @@ func (c *Client) CreateUserGroup(ctx context.Context, req *CreateUserGroupReques
 	if req.UserGroupName == "" {
 		return nil, &core.ValidationError{Field: "UserGroupName", Message: "user group name is required"}
 	}
+	r := *req
+	if r.MemberIDs == nil {
+		r.MemberIDs = []string{} // required array
+	}
 
-	body, err := json.Marshal(req)
+	body, err := json.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
