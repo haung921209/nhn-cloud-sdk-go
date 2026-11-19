@@ -258,7 +258,7 @@ func main() {
 			callResult("GetInstance", 1, nil)
 		}
 
-		if br, err := client.ListBackups(ctx, firstInstanceID); err != nil {
+		if br, err := client.ListBackups(ctx, firstInstanceID, 1, 20); err != nil {
 			callResult("ListBackups", 0, err)
 		} else {
 			_ = br
