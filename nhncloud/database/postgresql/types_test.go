@@ -81,8 +81,8 @@ func TestDatabaseInstance_JSONTags(t *testing.T) {
 		{"DBPort", "dbPort"},
 		{"DBFlavorID", "dbFlavorId"},
 		{"ParameterGroupID", "parameterGroupId"},
-		{"CreatedAt", "createdAt"},
-		{"UpdatedAt", "updatedAt"},
+		{"CreatedAt", "createdYmdt"},
+		{"UpdatedAt", "updatedYmdt"},
 	}
 	for _, tc := range cases {
 		testutil.AssertStructHasJSONTag(t, typ, tc.field, tc.jsonTag)
