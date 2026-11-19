@@ -121,3 +121,18 @@ func TestGetMetricStatisticsQueryAndValues(t *testing.T) {
 		t.Errorf("values %+v", v)
 	}
 }
+
+// selectAll (not selectAllYN) adds every project member; memberIds is a
+// required array, so it is sent even when empty.
+func TestCreateUserGroupBody(t *testing.T) {
+	c, seen := fakeClient(t, `{"header":{"resultCode":0,"isSuccessful":true},"userGroupId":"ug-1"}`)
+	if _, err := c.CreateUserGroup(context.Background(), &CreateUserGroupRequest{UserGroupName: "ug", SelectAllYN: true}); err != nil {
+		t.Fatal(err)
+	}
+	if seen.body["selectAll"] != true {
+		t.Errorf("body %v", seen.body)
+	}
+	if m, ok := seen.body["memberIds"].([]interface{}); !ok || len(m) != 0 {
+		t.Errorf("memberIds %v", seen.body["memberIds"])
+	}
+}
